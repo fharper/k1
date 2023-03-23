@@ -70,6 +70,7 @@ local action=$(gum choose \
     "1- destroy k3d" \
     "2- make repos public" \
     "3- get token scopes" \
+    "4- add a repo with Terraform" \
 )
 
 ########################
@@ -192,5 +193,34 @@ elif [[ "$git_provider" == 1-* && "$action" == 3-* ]] ; then
 elif [[ "$git_provider" == 2-* && "$action" == 3-* ]] ; then
 
     curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/personal_access_tokens/self | jq '.scopes'
+
+
+####################################
+# GitHub add a repo with Terraform #
+####################################
+elif [[ "$git_provider" == 1-* && "$action" == 4-* ]] ; then
+    local file="terraform/github/repos.tf"
+    local branch="testing-atlantis"
+
+    git clone git@github.com:$org/gitops.git
+    cd gitops
+
+    echo '' >> $file
+    echo 'module "newtestrepo" {' >> $file
+    echo '  source = "./modules/repository"' >> $file
+    echo '  repo_name          = "newtestrepo"' >> $file
+    echo '  archive_on_destroy = false' >> $file
+    echo '  auto_init          = false' >> $file
+    echo '}' >> $file
+
+    git checkout -b $branch
+    git add $file
+    git commit -m "adding a new repository for testing Atlantis"
+    git push -u origin
+
+    git remote -v | head -n 1 | awk -F "@" '{print $2}' | awk -F " " '{print $1}' | sed 's/:/\//g' | sed 's/\.git/\/pull\/new\/'$branch'/g' | awk '{print "http://"$1}' | xargs open
+
+    cd ..
+    rm -rf gitops
 
 fi
