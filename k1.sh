@@ -75,6 +75,6 @@ glab repo delete $org/metaphor --yes
 
 ## SSH Key
 local id=$(curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kubefirst-k3d-ssh-key") | .id')
-if $id; then
+if [[ -z $id ]]; then
   curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
 fi
