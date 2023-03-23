@@ -21,17 +21,17 @@ local gitlab_api="https://gitlab.com/api/v4"
 # Check tools #
 ###############
 if ! which k3d >/dev/null; then
-  echo "Please install k3d"
+  echo "Please install k3d - https://github.com/k3d-io/k3d"
   return
 fi
 
 if ! which jq >/dev/null; then
-  echo "Please install jq"
+  echo "Please install jq - https://github.com/stedolan/jq"
   return
 fi
 
-if ! which jq >/dev/null; then
-  echo "Please install gum"
+if ! which gum >/dev/null; then
+  echo "Please install gum - https://github.com/charmbracelet/gum/"
   return
 fi
 
