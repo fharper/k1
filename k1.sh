@@ -65,6 +65,8 @@ local action=$(gum choose \
     "2- destroy k3d + GitLab" \
     "3- make GitHub repos public" \
     "4- make GitLab repos public" \
+    "5- get GitHub token scopes" \
+    "6- get GitLab token scopes" \
 )
 
 ########################
@@ -173,5 +175,19 @@ elif [[ "$action" == 4-* ]] ; then
         curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
     fi
 
+
+#######################
+# GitLab token scopes #
+#######################
+elif [[ "$action" == 5-* ]] ; then
+
+    curl -sS -f -I -H "Authorization: Bearer $GITHUB_TOKEN" $github_api | grep -i x-oauth-scopes | grep -v access-control-expose-headers
+
+#######################
+# GitLab token scopes #
+#######################
+elif [[ "$action" == 6-* ]] ; then
+
+    curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/personal_access_tokens/self | jq '.scopes'
 
 fi
