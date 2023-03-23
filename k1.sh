@@ -59,20 +59,23 @@ fi
 # menu #
 ########
 
+gum format -- "Which Git Provider??"
+local git_provider=$(gum choose \
+    "1- GitHub" \
+    "2- GitLab" \
+)
+
 gum format -- "What do you to do?"
 local action=$(gum choose \
-    "1- destroy k3d + GitHub" \
-    "2- destroy k3d + GitLab" \
-    "3- make GitHub repos public" \
-    "4- make GitLab repos public" \
-    "5- get GitHub token scopes" \
-    "6- get GitLab token scopes" \
+    "1- destroy k3d" \
+    "2- make repos public" \
+    "3- get token scopes" \
 )
 
 ########################
 # destroy k3d + GitHub #
 ########################
-if [[ "$action" == 1-* ]] ; then
+if [[ "$git_provider" == 1-* && "$action" == 1-* ]] ; then
 
     # k3d
     k3d cluster delete kubefirst
@@ -92,7 +95,7 @@ if [[ "$action" == 1-* ]] ; then
 ########################
 # destroy k3d + GitLab #
 ########################
-elif [[ "$action" == 2-* ]] ; then
+elif [[ "$git_provider" == 2-* && "$action" == 1-* ]] ; then
 
     # k3d
     k3d cluster delete kubefirst
@@ -147,7 +150,7 @@ elif [[ "$action" == 2-* ]] ; then
 #######################
 # GitHub repos public #
 #######################
-elif [[ "$action" == 3-* ]] ; then
+elif [[ "$git_provider" == 1-* && "$action" == 2-* ]] ; then
 
     # gitops
     curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops  -d '{"private":false}'
@@ -161,7 +164,7 @@ elif [[ "$action" == 3-* ]] ; then
 #######################
 # GitLab repos public #
 #######################
-elif [[ "$action" == 4-* ]] ; then
+elif [[ "$git_provider" == 2-* && "$action" == 2-* ]] ; then
 
     # gitops
     local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
@@ -179,14 +182,14 @@ elif [[ "$action" == 4-* ]] ; then
 #######################
 # GitLab token scopes #
 #######################
-elif [[ "$action" == 5-* ]] ; then
+elif [[ "$git_provider" == 1-* && "$action" == 3-* ]] ; then
 
     curl -sS -f -I -H "Authorization: Bearer $GITHUB_TOKEN" $github_api | grep -i x-oauth-scopes | grep -v access-control-expose-headers
 
 #######################
 # GitLab token scopes #
 #######################
-elif [[ "$action" == 6-* ]] ; then
+elif [[ "$git_provider" == 2-* && "$action" == 3-* ]] ; then
 
     curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/personal_access_tokens/self | jq '.scopes'
 
