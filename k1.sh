@@ -12,16 +12,6 @@ if ! which k3d >/dev/null; then
   return
 fi
 
-if ! which gh >/dev/null; then
-  echo "Please install GitHub CLI"
-  return
-fi
-
-if ! which glab >/dev/null; then
-  echo "Please install GitHub CLI"
-  return
-fi
-
 if ! which jq >/dev/null; then
   echo "Please install jq"
   return
@@ -43,14 +33,14 @@ kubefirst clean
 # GitHub
 
 ## Groups
-curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
-curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
+curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
+curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
 
 ## Repos
-gh repo delete $username/metaphor --yes
-gh repo delete $username/gitops --yes
-gh repo delete $org/metaphor --yes
-gh repo delete $org/gitops --yes
+curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor
+curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops
+curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
+curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops
 
 # GitLab
 
@@ -68,10 +58,18 @@ if $id; then
 fi
 
 ## Repos
-glab repo delete $org/metaphor-go --yes
-glab repo delete $org/gitops --yes
-glab repo delete $org/metaphor-frontend --yes
-glab repo delete $org/metaphor --yes
+
+### metaphor
+local project_id=$(curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
+if [[ -z $project_id ]]; then
+  curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+fi
+
+### gitops
+local project_id=$(curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
+if [[ -z $project_id ]]; then
+  curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+fi
 
 ## SSH Key
 local id=$(curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kubefirst-k3d-ssh-key") | .id')
