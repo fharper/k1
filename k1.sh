@@ -30,6 +30,11 @@ if ! which jq >/dev/null; then
   return
 fi
 
+if ! which jq >/dev/null; then
+  echo "Please install gum"
+  return
+fi
+
 
 ##################
 # Check env vars #
@@ -43,74 +48,85 @@ if [ -z "${GITLAB_TOKEN}" ]; then
 fi
 
 
-#######
-# k3d #
-#######
-k3d cluster delete kubefirst
-kubefirst clean
+gum format -- "What do you to do?"
+local action=$(gum choose \
+    "1- destroy k3d + GitHub" \
+    "2- destroy k3d + GitLab" \
+)
+
+########################
+# destroy k3d + GitHub #
+########################
+if [[ "$action" == 1-* ]] ; then
+
+    # k3d
+    k3d cluster delete kubefirst
+    kubefirst clean
+
+    # Groups
+    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
+    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
+
+    # Repos
+    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops
+    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor
+    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops
+    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
 
 
-##########
-# GitHub #
-##########
+########################
+# destroy k3d + GitLab #
+########################
+elif [[ "$action" == 2-* ]] ; then
 
-## Groups
-curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
-curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
+    # k3d
+    k3d cluster delete kubefirst
+    kubefirst clean
 
-## Repos
-curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops
-curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor
-curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops
-curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
+    # Groups
 
+    ## Developers
+    local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="$org/developers") | .id')
+    if $id; then
+    curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
+    fi
 
-##########
-# GitLab #
-##########
+    ## admins
+    local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="$org/admins") | .id')
+    if $id; then
+    curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
+    fi
 
-## Groups
+    # Repos
 
-### Developers
-local id=$(curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="$org/developers") | .id')
-if $id; then
-  curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
-fi
+    ## gitops
+    local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
+    if [[ -z $project_id ]]; then
+    curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+    fi
 
-### admins
-local id=$(curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="$org/admins") | .id')
-if $id; then
-  curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
-fi
+    ## metaphor
+    local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
 
-## Repos
+    if [[ -z $project_id ]]; then
+        local registry_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories | jq '.[].id')
 
-### gitops
-local project_id=$(curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
-if [[ -z $project_id ]]; then
-  curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
-fi
+        if [[ -z $registry_id ]]; then
+            ### Container Registry Tags
+            curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id/tags/ --data "name_regex=.*"
 
-### metaphor
-local project_id=$(curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
+            ### Container Registry
+            curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id
+        fi
 
-if [[ -z $project_id ]]; then
-    curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories
+        ### Repository
+        curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+    fi
 
-    local $registry_id=curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories | jq '.[].id'
+    # SSH Key
+    local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kubefirst-k3d-ssh-key") | .id')
+    if [[ -z $id ]]; then
+    curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
+    fi
 
-    #### Container Registry Tags
-    curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id/tags/ --data "name_regex=.*"
-
-    #### Container Registry
-    curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id
-
-    #### Repository
-    curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
-fi
-
-## SSH Key
-local id=$(curl -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kubefirst-k3d-ssh-key") | .id')
-if [[ -z $id ]]; then
-  curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
 fi
