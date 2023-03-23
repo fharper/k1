@@ -8,18 +8,26 @@
 #
 ##################################################################
 
-#################
-# CONFIGURATION #
-#################
+#######################
+# USER CONFIGURATIONS #
+#######################
+
+# Please update the following
 local username="fharper"
 local org="kubefirst-fharper"
+
+
+##################
+# CONFIGURATIONS #
+##################
 
 local github_api="https://api.github.com"
 local gitlab_api="https://gitlab.com/api/v4"
 
-###############
-# Check tools #
-###############
+
+########
+# TOOL #
+########
 if ! which k3d >/dev/null; then
   echo "Please install k3d - https://github.com/k3d-io/k3d"
   return
@@ -36,9 +44,9 @@ if ! which gum >/dev/null; then
 fi
 
 
-##################
-# Check env vars #
-##################
+############
+# ENV VARS #
+############
 if [ -z "${GITHUB_TOKEN}" ]; then
   echo "Please set the GITHUB_TOKEN environment variable"
 fi
@@ -47,11 +55,16 @@ if [ -z "${GITLAB_TOKEN}" ]; then
   echo "Please set the GITLAB_TOKEN environment variable"
 fi
 
+########
+# menu #
+########
 
 gum format -- "What do you to do?"
 local action=$(gum choose \
     "1- destroy k3d + GitHub" \
     "2- destroy k3d + GitLab" \
+    "3- make GitHub repos public" \
+    "4- make GitLab repos public" \
 )
 
 ########################
@@ -102,7 +115,7 @@ elif [[ "$action" == 2-* ]] ; then
     ## gitops
     local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
     if [[ -z $project_id ]]; then
-    curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+        curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
     fi
 
     ## metaphor
@@ -128,5 +141,37 @@ elif [[ "$action" == 2-* ]] ; then
     if [[ -z $id ]]; then
     curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
     fi
+
+#######################
+# GitHub repos public #
+#######################
+elif [[ "$action" == 3-* ]] ; then
+
+    # gitops
+    curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops  -d '{"private":false}'
+    curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops  -d '{"private":false}'
+
+    # metaphor
+    curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor  -d '{"private":false}'
+    curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor  -d '{"private":false}'
+
+
+#######################
+# GitLab repos public #
+#######################
+elif [[ "$action" == 4-* ]] ; then
+
+    # gitops
+    local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
+    if [[ -z $project_id ]]; then
+        curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
+    fi
+
+    # metaphor
+    local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
+    if [[ -z $project_id ]]; then
+        curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
+    fi
+
 
 fi
