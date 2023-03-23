@@ -1,5 +1,16 @@
 #!/bin/zsh
 
+##################################################################
+#
+# Small ZSH script to clean my kubefirst tests or help me debug
+#
+# Please use at your own risk
+#
+##################################################################
+
+#################
+# CONFIGURATION #
+#################
 local username="fharper"
 local org="kubefirst-fharper"
 
