@@ -106,36 +106,37 @@ elif [[ "$git_provider" == 2-* && "$action" == 1-* ]] ; then
 
     ## Developers
     local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="$org/developers") | .id')
-    if $id; then
-    curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
+    if [[ ! -z $id ]]; then
+        curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
     fi
 
     ## admins
     local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="$org/admins") | .id')
-    if $id; then
-    curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
+    if [[ ! -z $id ]]; then
+        curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
     fi
 
     # Repos
 
     ## gitops
     local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
-    if [[ -z $project_id ]]; then
-        curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+
+    if [[ ! -z $project_id ]]; then
+        curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
     fi
 
     ## metaphor
     local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
 
-    if [[ -z $project_id ]]; then
+    if [[ ! -z $project_id ]]; then
         local registry_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories | jq '.[].id')
 
-        if [[ -z $registry_id ]]; then
+        if [[ ! -z $registry_id ]]; then
             ### Container Registry Tags
-            curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id/tags/ --data "name_regex=.*"
+            curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id/tags/ --data "name_regex=.*"
 
             ### Container Registry
-            curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id
+            curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id
         fi
 
         ### Repository
@@ -144,8 +145,8 @@ elif [[ "$git_provider" == 2-* && "$action" == 1-* ]] ; then
 
     # SSH Key
     local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kubefirst-k3d-ssh-key") | .id')
-    if [[ -z $id ]]; then
-    curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
+    if [[ ! -z $id ]]; then
+        curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
     fi
 
 #######################
@@ -169,13 +170,13 @@ elif [[ "$git_provider" == 2-* && "$action" == 2-* ]] ; then
 
     # gitops
     local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
-    if [[ -z $project_id ]]; then
+    if [[ ! -z $project_id ]]; then
         curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
     fi
 
     # metaphor
     local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
-    if [[ -z $project_id ]]; then
+    if [[ ! -z $project_id ]]; then
         curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
     fi
 
