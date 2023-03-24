@@ -230,4 +230,33 @@ elif [[ "$git_provider" == 1-* && "$action" == 4-* ]] ; then
     cd ..
     rm -rf gitops
 
+####################################
+# GitLab add a repo with Terraform #
+####################################
+elif [[ "$git_provider" == 2-* && "$action" == 4-* ]] ; then
+    local file="terraform/gitlab/projects.tf"
+    local branch="testing-atlantis"
+
+    git clone git@gitlab.com:$org/gitops.git
+    cd gitops
+
+    echo '' >> $file
+    echo 'module "newtestrepo" {' >> $file
+    echo '  source = "./modules/repository"' >> $file
+    echo '  repo_name          = "newtestrepo"' >> $file
+    echo '  archive_on_destroy = false' >> $file
+    echo '  auto_init          = false' >> $file
+    echo '}' >> $file
+
+    git checkout -b $branch
+    git add $file
+    git commit -m "adding a new repository for testing Atlantis"
+    git push -u origin
+
+
+    git remote -v | head -n 1 | awk -F "@" '{print $2}' | awk -F " " '{print $1}' | sed 's/:/\//g' | sed 's/\.git/\/-\/merge_requests\/new\?merge_request%5Bsource_branch%5D='$branch'/g' | awk '{print "http://"$1}' | xargs open
+
+    cd ..
+    rm -rf gitops
+
 fi
