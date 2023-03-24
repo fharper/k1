@@ -59,31 +59,37 @@ fi
 # menu #
 ########
 
-gum format -- "Which Git Provider??"
-local git_provider=$(gum choose \
+gum format -- "Which platform??"
+local platform=$(gum choose \
     "1- GitHub" \
     "2- GitLab" \
+    "3- k3d" \
+    "4- Civo" \
 )
 
-gum format -- "What do you to do?"
-local action=$(gum choose \
-    "1- destroy k3d" \
-    "2- make repos public" \
-    "3- get token scopes" \
-    "4- add a repo with Terraform" \
-)
+local action=""
+local platform_name=${platform//[0-9]- /}
+if [[ "$platform" == 1* || "$platform" == 2* ]] ; then
+    gum format -- "What do you to do with $platform_name?"
+    local action=$(gum choose \
+        "1- destroy" \
+        "2- make repos public" \
+        "3- get token scopes" \
+        "4- add a repo with Terraform" \
+    )
+fi
 
-########################
-# destroy k3d + GitHub #
-########################
-if [[ "$git_provider" == 1-* && "$action" == 1-* ]] ; then
+if [[ "$platform" == 3* || "$platform" == 4* ]] ; then
+    gum format -- "What do you to do $platform_name?"
+    local action=$(gum choose \
+        "1- destroy" \
+    )
+fi
 
-    # k3d
-    k3d cluster delete kubefirst
-
-    # kubefirst settings
-    rm -rf ~/.k1
-    rm ~/.kubefirst
+##################
+# destroy GitHub #
+##################
+if [[ "$platform" == 1* && "$action" == 1* ]] ; then
 
     # Groups
     curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
@@ -96,17 +102,10 @@ if [[ "$git_provider" == 1-* && "$action" == 1-* ]] ; then
     curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
 
 
-########################
-# destroy k3d + GitLab #
-########################
-elif [[ "$git_provider" == 2-* && "$action" == 1-* ]] ; then
-
-    # k3d
-    k3d cluster delete kubefirst
-
-    # kubefirst settings
-    rm -rf ~/.k1
-    rm ~/.kubefirst
+##################
+# destroy GitLab #
+##################
+elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
 
     # Groups
 
@@ -158,7 +157,7 @@ elif [[ "$git_provider" == 2-* && "$action" == 1-* ]] ; then
 #######################
 # GitHub repos public #
 #######################
-elif [[ "$git_provider" == 1-* && "$action" == 2-* ]] ; then
+elif [[ "$platform" == 1* && "$action" == 2* ]] ; then
 
     # gitops
     curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops  -d '{"private":false}'
@@ -172,7 +171,7 @@ elif [[ "$git_provider" == 1-* && "$action" == 2-* ]] ; then
 #######################
 # GitLab repos public #
 #######################
-elif [[ "$git_provider" == 2-* && "$action" == 2-* ]] ; then
+elif [[ "$platform" == 2* && "$action" == 2* ]] ; then
 
     # gitops
     local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
@@ -190,14 +189,14 @@ elif [[ "$git_provider" == 2-* && "$action" == 2-* ]] ; then
 #######################
 # GitLab token scopes #
 #######################
-elif [[ "$git_provider" == 1-* && "$action" == 3-* ]] ; then
+elif [[ "$platform" == 1* && "$action" == 3* ]] ; then
 
     curl -sS -f -I -H "Authorization: Bearer $GITHUB_TOKEN" $github_api | grep -i x-oauth-scopes | grep -v access-control-expose-headers
 
 #######################
 # GitLab token scopes #
 #######################
-elif [[ "$git_provider" == 2-* && "$action" == 3-* ]] ; then
+elif [[ "$platform" == 2* && "$action" == 3* ]] ; then
 
     curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/personal_access_tokens/self | jq '.scopes'
 
@@ -205,7 +204,7 @@ elif [[ "$git_provider" == 2-* && "$action" == 3-* ]] ; then
 ####################################
 # GitHub add a repo with Terraform #
 ####################################
-elif [[ "$git_provider" == 1-* && "$action" == 4-* ]] ; then
+elif [[ "$platform" == 1* && "$action" == 4* ]] ; then
     local file="terraform/github/repos.tf"
     local branch="testing-atlantis"
 
@@ -233,7 +232,7 @@ elif [[ "$git_provider" == 1-* && "$action" == 4-* ]] ; then
 ####################################
 # GitLab add a repo with Terraform #
 ####################################
-elif [[ "$git_provider" == 2-* && "$action" == 4-* ]] ; then
+elif [[ "$platform" == 2* && "$action" == 4* ]] ; then
     local file="terraform/gitlab/projects.tf"
     local branch="testing-atlantis"
 
@@ -258,5 +257,19 @@ elif [[ "$git_provider" == 2-* && "$action" == 4-* ]] ; then
 
     cd ..
     rm -rf gitops
+
+
+###############
+# Destroy k3d #
+###############
+elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
+
+    # k3d
+    k3d cluster delete kubefirst
+
+    # kubefirst settings
+    rm -rf ~/.k1
+    rm ~/.kubefirst
+
 
 fi
