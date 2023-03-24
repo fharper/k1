@@ -80,7 +80,10 @@ if [[ "$git_provider" == 1-* && "$action" == 1-* ]] ; then
 
     # k3d
     k3d cluster delete kubefirst
-    kubefirst clean
+
+    # kubefirst settings
+    rm -rf ~/.k1
+    rm ~/.kubefirst
 
     # Groups
     curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
@@ -100,7 +103,10 @@ elif [[ "$git_provider" == 2-* && "$action" == 1-* ]] ; then
 
     # k3d
     k3d cluster delete kubefirst
-    kubefirst clean
+
+    # kubefirst settings
+    rm -rf ~/.k1
+    rm ~/.kubefirst
 
     # Groups
 
