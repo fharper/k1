@@ -15,6 +15,7 @@
 # Please update the following
 local username="fharper"
 local org="kubefirst-fharper"
+local cluster_name="kubefirst-fred"
 
 
 ##################
@@ -23,6 +24,7 @@ local org="kubefirst-fharper"
 
 local github_api="https://api.github.com"
 local gitlab_api="https://gitlab.com/api/v4"
+local civo_api="https://api.civo.com/v2"
 
 
 ########
@@ -53,6 +55,10 @@ fi
 
 if [ -z "${GITLAB_TOKEN}" ]; then
   echo "Please set the GITLAB_TOKEN environment variable"
+fi
+
+if [ -z "${CIVO_TOKEN}" ]; then
+  echo "Please set the CIVO_TOKEN environment variable"
 fi
 
 ########
@@ -264,12 +270,37 @@ elif [[ "$platform" == 2* && "$action" == 4* ]] ; then
 ###############
 elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
 
-    # k3d
+    # cluster
     k3d cluster delete kubefirst
 
     # kubefirst settings
     rm -rf ~/.k1
     rm ~/.kubefirst
 
+
+################
+# Destroy Civo #
+################
+elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
+
+    local cluster_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters | jq -r '.items[] | select(.name=="'$cluster_name'")  | .id')
+
+    # volumes
+    #local volumes_ids=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id')
+    local volumes_ids=($(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id'))
+    for volume_id in $volumes_ids; do
+        curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes/$volume_id
+    done
+
+    # cluster
+    if [[ ! -z $cluster_id ]]; then
+        curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters/$cluster_id
+    fi
+
+    # network
+    local network_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks | jq -r '.[] | select(.label=="'$cluster_name'") | .id')
+    if [[ ! -z $network_id ]]; then
+        curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks/$network_id
+    fi
 
 fi
