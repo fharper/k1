@@ -65,6 +65,11 @@ fi
 # menu #
 ########
 
+gum style \
+	--foreground 212 --border-foreground 212 --border double \
+	--align center --width 100 --margin "1 2" --padding "2 4" \
+	'k1-utils' 'With great power comes great responsibility, use carefully!'
+
 gum format -- "Which platform??"
 local platform=$(gum choose \
     "1- GitHub" \
