@@ -103,15 +103,21 @@ fi
 ##################
 if [[ "$platform" == 1* && "$action" == 1* ]] ; then
 
-    # Groups
-    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
-    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
+    local confirmation=$(gum confirm && echo "true" || echo "false")
 
-    # Repos
-    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops
-    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor
-    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops
-    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
+    if [[ $confirmation == "true" ]] ; then
+        echo "Destroying everything GitHub"
+
+        # Groups
+        curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
+        curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
+
+        # Repos
+        curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops
+        curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor
+        curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops
+        curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
+    fi
 
 
 ##################
@@ -119,65 +125,78 @@ if [[ "$platform" == 1* && "$action" == 1* ]] ; then
 ##################
 elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
 
-    # Groups
+    local confirmation=$(gum confirm && echo "true" || echo "false")
 
-    ## Developers
-    local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$org'/developers") | .id')
-    if [[ ! -z $id ]]; then
-        curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
-    fi
+    if [[ $confirmation == "true" ]] ; then
+        echo "Destroying everything GitLab"
 
-    ## admins
-    local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$org'/admins") | .id')
-    if [[ ! -z $id ]]; then
-        curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
-    fi
+        # Groups
 
-    # Repos
-
-    ## gitops
-    local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
-
-    if [[ ! -z $project_id ]]; then
-        curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
-    fi
-
-    ## metaphor
-    local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
-
-    if [[ ! -z $project_id ]]; then
-        local registry_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories | jq '.[].id')
-
-        if [[ ! -z $registry_id ]]; then
-            ### Container Registry Tags
-            curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id/tags/ --data "name_regex=.*"
-
-            ### Container Registry
-            curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id
+        ## Developers
+        local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$org'/developers") | .id')
+        if [[ ! -z $id ]]; then
+            curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
         fi
 
-        ### Repository
-        curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+        ## admins
+        local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$org'/admins") | .id')
+        if [[ ! -z $id ]]; then
+            curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
+        fi
+
+        # Repos
+
+        ## gitops
+        local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
+
+        if [[ ! -z $project_id ]]; then
+            curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+        fi
+
+        ## metaphor
+        local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
+
+        if [[ ! -z $project_id ]]; then
+            local registry_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories | jq '.[].id')
+
+            if [[ ! -z $registry_id ]]; then
+                ### Container Registry Tags
+                curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id/tags/ --data "name_regex=.*"
+
+                ### Container Registry
+                curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id
+            fi
+
+            ### Repository
+            curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+        fi
+
+        # SSH Key
+        local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kubefirst-k3d-ssh-key") | .id')
+        if [[ ! -z $id ]]; then
+            curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
+        fi
     fi
 
-    # SSH Key
-    local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kubefirst-k3d-ssh-key") | .id')
-    if [[ ! -z $id ]]; then
-        curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
-    fi
 
 #######################
 # GitHub repos public #
 #######################
 elif [[ "$platform" == 1* && "$action" == 2* ]] ; then
 
-    # gitops
-    curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops  -d '{"private":false}'
-    curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops  -d '{"private":false}'
+    local confirmation=$(gum confirm && echo "true" || echo "false")
+    
+    if [[ $confirmation == "true" ]] ; then
+        echo "Changing GitHub private repositories to public"
 
-    # metaphor
-    curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor  -d '{"private":false}'
-    curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor  -d '{"private":false}'
+        # gitops
+        curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops  -d '{"private":false}'
+        curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops  -d '{"private":false}'
+
+        # metaphor
+        curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor  -d '{"private":false}'
+        curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor  -d '{"private":false}'
+    fi
 
 
 #######################
@@ -185,16 +204,22 @@ elif [[ "$platform" == 1* && "$action" == 2* ]] ; then
 #######################
 elif [[ "$platform" == 2* && "$action" == 2* ]] ; then
 
-    # gitops
-    local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
-    if [[ ! -z $project_id ]]; then
-        curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
-    fi
+    local confirmation=$(gum confirm && echo "true" || echo "false")
 
-    # metaphor
-    local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
-    if [[ ! -z $project_id ]]; then
-        curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
+    if [[ $confirmation == "true" ]] ; then
+        echo "Changing GitLab private repositories to public"
+
+        # gitops
+        local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
+        if [[ ! -z $project_id ]]; then
+            curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
+        fi
+
+        # metaphor
+        local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
+        if [[ ! -z $project_id ]]; then
+            curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
+        fi
     fi
 
 
@@ -204,6 +229,7 @@ elif [[ "$platform" == 2* && "$action" == 2* ]] ; then
 elif [[ "$platform" == 1* && "$action" == 3* ]] ; then
 
     curl -sS -f -I -H "Authorization: Bearer $GITHUB_TOKEN" $github_api | grep -i x-oauth-scopes | grep -v access-control-expose-headers
+
 
 #######################
 # GitLab token scopes #
@@ -241,6 +267,7 @@ elif [[ "$platform" == 1* && "$action" == 4* ]] ; then
     cd ..
     rm -rf gitops
 
+
 ####################################
 # GitLab add a repo with Terraform #
 ####################################
@@ -276,12 +303,18 @@ elif [[ "$platform" == 2* && "$action" == 4* ]] ; then
 ###############
 elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
 
-    # cluster
-    k3d cluster delete kubefirst
+    local confirmation=$(gum confirm && echo "true" || echo "false")
+    
+    if [[ $confirmation == "true" ]] ; then
+        echo "Destroying everything k3d"
 
-    # kubefirst settings
-    rm -rf ~/.k1
-    rm ~/.kubefirst
+        # cluster
+        k3d cluster delete kubefirst
+
+        # kubefirst settings
+        rm -rf ~/.k1
+        rm ~/.kubefirst
+    fi
 
 
 ################
@@ -289,24 +322,30 @@ elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
 ################
 elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
 
-    local cluster_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters | jq -r '.items[] | select(.name=="'$cluster_name'")  | .id')
+    local confirmation=$(gum confirm && echo "true" || echo "false")
+    
+    if [[ $confirmation == "true" ]] ; then
+        echo "Destroying everything Civo"
 
-    # volumes
-    #local volumes_ids=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id')
-    local volumes_ids=($(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id'))
-    for volume_id in $volumes_ids; do
-        curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes/$volume_id
-    done
+        local cluster_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters | jq -r '.items[] | select(.name=="'$cluster_name'")  | .id')
 
-    # cluster
-    if [[ ! -z $cluster_id ]]; then
-        curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters/$cluster_id
-    fi
+        # volumes
+        #local volumes_ids=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id')
+        local volumes_ids=($(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id'))
+        for volume_id in $volumes_ids; do
+            curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes/$volume_id
+        done
 
-    # network
-    local network_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks | jq -r '.[] | select(.label=="'$cluster_name'") | .id')
-    if [[ ! -z $network_id ]]; then
-        curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks/$network_id
+        # cluster
+        if [[ ! -z $cluster_id ]]; then
+            curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters/$cluster_id
+        fi
+
+        # network
+        local network_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks | jq -r '.[] | select(.label=="'$cluster_name'") | .id')
+        if [[ ! -z $network_id ]]; then
+            curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks/$network_id
+        fi
     fi
 
 elif [[ "$platform" == 5* ]] ; then
