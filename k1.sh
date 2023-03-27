@@ -76,6 +76,7 @@ local platform=$(gum choose \
     "2- GitLab" \
     "3- k3d" \
     "4- Civo" \
+    "5- EXIT" \
 )
 
 local action=""
@@ -307,5 +308,8 @@ elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
     if [[ ! -z $network_id ]]; then
         curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks/$network_id
     fi
+
+elif [[ "$platform" == 5* ]] ; then
+    exit
 
 fi
