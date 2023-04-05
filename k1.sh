@@ -70,13 +70,14 @@ gum style \
 	--align center --width 100 --margin "1 2" --padding "2 4" \
 	'k1-utils' 'With great power comes great responsibility, use carefully!'
 
-gum format -- "Which platform??"
+gum format -- "Which platform?"
 local platform=$(gum choose \
     "1- GitHub" \
     "2- GitLab" \
     "3- k3d" \
     "4- Civo" \
-    "5- EXIT" \
+    "5- Misc" \
+    "6- EXIT" \
 )
 
 local action=""
@@ -95,6 +96,13 @@ if [[ "$platform" == 3* || "$platform" == 4* ]] ; then
     gum format -- "What do you to do $platform_name?"
     local action=$(gum choose \
         "1- destroy" \
+    )
+fi
+
+if [[ "$platform" == 5* ]] ; then
+    gum format -- "What do you to do?"
+    local action=$(gum choose \
+        "1- clean logs" \
     )
 fi
 
@@ -185,7 +193,7 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
 elif [[ "$platform" == 1* && "$action" == 2* ]] ; then
 
     local confirmation=$(gum confirm && echo "true" || echo "false")
-    
+
     if [[ $confirmation == "true" ]] ; then
         echo "Changing GitHub private repositories to public"
 
@@ -304,7 +312,7 @@ elif [[ "$platform" == 2* && "$action" == 4* ]] ; then
 elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
 
     local confirmation=$(gum confirm && echo "true" || echo "false")
-    
+
     if [[ $confirmation == "true" ]] ; then
         echo "Destroying everything k3d"
 
@@ -323,7 +331,7 @@ elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
 elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
 
     local confirmation=$(gum confirm && echo "true" || echo "false")
-    
+
     if [[ $confirmation == "true" ]] ; then
         echo "Destroying everything Civo"
 
@@ -349,6 +357,13 @@ elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
     fi
 
 elif [[ "$platform" == 5* ]] ; then
+    local confirmation=$(gum confirm && echo "true" || echo "false")
+
+    if [[ $confirmation == "true" ]] ; then
+        rm ~/.k1/logs/*
+    fi
+
+elif [[ "$platform" == 6* && "$action" == 1* ]] ; then
     exit
 
 fi
