@@ -61,6 +61,13 @@ if [ -z "${CIVO_TOKEN}" ]; then
   echo "Please set the CIVO_TOKEN environment variable"
 fi
 
+#############
+# FUNCTIONS #
+#############
+function say {
+    gum style --foreground 93 "$1"
+}
+
 ########
 # menu #
 ########
@@ -114,16 +121,24 @@ if [[ "$platform" == 1* && "$action" == 1* ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
-        echo "Destroying everything GitHub"
+        say "Destroying everything GitHub"
 
         # Groups
+        say "Destroying GitHub Groups"
+        say "Destroying GitHub Group Developer"
         curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
+        say "Destroying GitHub Group Admins"
         curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
 
         # Repos
+        say "Destroying GitHub repositories"
+        say "Destroying GitHub repository $username/gitops"
         curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops
+        say "Destroying GitHub repository $username/metaphor"
         curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor
+        say "Destroying GitHub repository $org/gitops"
         curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops
+        say "Destroying GitHub repository $org/metaphor"
         curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
     fi
 
@@ -139,25 +154,29 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
         echo "Destroying everything GitLab"
 
         # Groups
+        say "Destroying GitLab Groups (if any)"
 
         ## Developers
         local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$org'/developers") | .id')
         if [[ ! -z $id ]]; then
+            say "Destroying GitLab Group Developers"
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
         fi
 
         ## admins
         local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$org'/admins") | .id')
         if [[ ! -z $id ]]; then
+            say "Destroying GitLab Group Admins"
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
         fi
 
         # Repos
+        say "Destroying GitLab Repositories & Registry (if any)"
 
         ## gitops
         local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
-
         if [[ ! -z $project_id ]]; then
+            say "Destroying GitLab Repository gitops"
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
         fi
 
@@ -169,19 +188,23 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
 
             if [[ ! -z $registry_id ]]; then
                 ### Container Registry Tags
+                say "Destroying GitLab Container Registry Tags for metaphor"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id/tags/ --data "name_regex=.*"
 
                 ### Container Registry
+                say "Destroying GitLab Container Registry for metaphor"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id
             fi
 
             ### Repository
+            say "Destroying GitLab Repository metaphor"
             curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
         fi
 
         # SSH Key
         local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kubefirst-k3d-ssh-key") | .id')
         if [[ ! -z $id ]]; then
+            say "Destroying GitLab SSH Key"
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
         fi
     fi
@@ -195,13 +218,15 @@ elif [[ "$platform" == 1* && "$action" == 2* ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
-        echo "Changing GitHub private repositories to public"
+        say "Changing GitHub Private Repositories to Public ones"
 
         # gitops
+        say "Changing GitHub Private Repositories gitops to Public ones"
         curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops  -d '{"private":false}'
         curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops  -d '{"private":false}'
 
         # metaphor
+        say "Changing GitHub Private Repositories metaphor to Public ones"
         curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor  -d '{"private":false}'
         curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor  -d '{"private":false}'
     fi
@@ -215,17 +240,19 @@ elif [[ "$platform" == 2* && "$action" == 2* ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
-        echo "Changing GitLab private repositories to public"
+        say "Changing GitLab Private Repositories to Public ones (if any)"
 
         # gitops
         local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
         if [[ ! -z $project_id ]]; then
+            say "Changing GitHub Private Repository gitops to a Public one"
             curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
         fi
 
         # metaphor
         local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
         if [[ ! -z $project_id ]]; then
+            say "Changing GitHub Private Repository metaphor to a Public one"
             curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
         fi
     fi
@@ -236,6 +263,7 @@ elif [[ "$platform" == 2* && "$action" == 2* ]] ; then
 #######################
 elif [[ "$platform" == 1* && "$action" == 3* ]] ; then
 
+    say "Getting the scopes of the GitLab token"
     curl -sS -f -I -H "Authorization: Bearer $GITHUB_TOKEN" $github_api | grep -i x-oauth-scopes | grep -v access-control-expose-headers
 
 
@@ -244,6 +272,7 @@ elif [[ "$platform" == 1* && "$action" == 3* ]] ; then
 #######################
 elif [[ "$platform" == 2* && "$action" == 3* ]] ; then
 
+    say "Getting the scopes of the GitHub token"
     curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/personal_access_tokens/self | jq '.scopes'
 
 
@@ -251,6 +280,8 @@ elif [[ "$platform" == 2* && "$action" == 3* ]] ; then
 # GitHub add a repo with Terraform #
 ####################################
 elif [[ "$platform" == 1* && "$action" == 4* ]] ; then
+    say "Creating a PR to add a repository named 'newtestrepo' with Terraform on GitHub"
+
     local file="terraform/github/repos.tf"
     local branch="testing-atlantis"
 
@@ -280,6 +311,8 @@ elif [[ "$platform" == 1* && "$action" == 4* ]] ; then
 # GitLab add a repo with Terraform #
 ####################################
 elif [[ "$platform" == 2* && "$action" == 4* ]] ; then
+    say "Creating a PR to add a repository named 'newtestrepo' with Terraform on GitLab"
+
     local file="terraform/gitlab/projects.tf"
     local branch="testing-atlantis"
 
@@ -314,12 +347,14 @@ elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
-        echo "Destroying everything k3d"
+        say "Destroying everything k3d"
 
         # cluster
+        say "Destroying k3d kubefirst cluster"
         k3d cluster delete kubefirst
 
         # kubefirst settings
+        say "Destroying all kubefirst files & folders"
         rm -rf ~/.k1
         rm ~/.kubefirst
     fi
@@ -333,25 +368,27 @@ elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
-        echo "Destroying everything Civo"
+        say "Destroying everything Civo"
 
         local cluster_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters | jq -r '.items[] | select(.name=="'$cluster_name'")  | .id')
 
         # volumes
-        #local volumes_ids=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id')
         local volumes_ids=($(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id'))
+        say "Destroying all Civo volumes (if any)"
         for volume_id in $volumes_ids; do
             curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes/$volume_id
         done
 
         # cluster
         if [[ ! -z $cluster_id ]]; then
+            say "Destroying the Civo cluster"
             curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters/$cluster_id
         fi
 
         # network
         local network_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks | jq -r '.[] | select(.label=="'$cluster_name'") | .id')
         if [[ ! -z $network_id ]]; then
+            say "Destroying the Civo network"
             curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks/$network_id
         fi
     fi
@@ -360,10 +397,17 @@ elif [[ "$platform" == 5* ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
+        say "Destroying the kubefirst logs"
         rm ~/.k1/logs/*
     fi
 
-elif [[ "$platform" == 6* && "$action" == 1* ]] ; then
+elif [[ "$platform" == 6* ]] ; then
+    echo "\n"
+    say "Goodbye my lover"
+    say "Goodbye my friend"
+    say "You have been the one"
+    say "You have been the one for me"
+    echo "\n"
     exit
 
 fi
