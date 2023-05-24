@@ -83,7 +83,7 @@ local platform=$(gum choose \
     "2- GitLab" \
     "3- k3d" \
     "4- Civo" \
-    "5- Misc" \
+    "5- kubefirst" \
     "6- EXIT" \
 )
 
@@ -109,7 +109,8 @@ fi
 if [[ "$platform" == 5* ]] ; then
     gum format -- "What do you to do?"
     local action=$(gum choose \
-        "1- clean logs" \
+        "1- destroy" \
+        "2- clean logs" \
     )
 fi
 
@@ -393,7 +394,20 @@ elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
         fi
     fi
 
-elif [[ "$platform" == 5* ]] ; then
+#####################
+# Destroy Kubefirst #
+#####################
+elif [[ "$platform" == 5* && "$action" == 1* ]] ; then
+    if [[ $confirmation == "true" ]] ; then
+        say "Destroying kubefirst folders & files"
+        rm -rf ~/.k1/
+        rm ~/.kubefirst
+    fi
+
+##########################
+# Destroy Kubefirst Logs #
+##########################
+elif [[ "$platform" == 5* && "$action" == 2* ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
@@ -401,6 +415,9 @@ elif [[ "$platform" == 5* ]] ; then
         rm ~/.k1/logs/*
     fi
 
+############
+# Quitting #
+############
 elif [[ "$platform" == 6* ]] ; then
     echo "\n"
     say "Goodbye my lover"
