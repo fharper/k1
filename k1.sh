@@ -364,9 +364,17 @@ elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
         fi
 
         # kubefirst settings
-        say "Destroying all kubefirst files & folders"
-        rm -rf ~/.k1
-        rm ~/.kubefirst
+        say "Destroying all kubefirst files & folders (if any)"
+
+        if [ -d ~/.k1 ]; then
+            say "Destroying kubefirst folder"
+            rm -rf ~/.k1
+        fi
+
+        if [ -f ~/.kubefirst ]; then
+            say "Destroying kubefirst configuration file"
+            rm ~/.kubefirst
+        fi
     fi
 
 
