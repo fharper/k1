@@ -348,14 +348,20 @@ elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
-        say "Destroying everything k3d"
+        say "Destroying k3d clusters (if any)"
 
         # cluster
-        say "Destroying k3d kubefirst cluster"
-        k3d cluster delete kubefirst
+        local cluster=$(k3d cluster list | grep kubefirst-console)
+        if [[ ! -z $cluster ]]; then
+            say "Destroying k3d kubefirst-console cluster"
+            k3d cluster delete kubefirst-console
+        fi
 
-        say "Destroying k3d kubefirst-console cluster"
-        k3d cluster delete kubefirst-console
+        local cluster=$(k3d cluster list | grep kubefirst)
+        if [[ ! -z $cluster ]]; then
+            say "Destroying k3d kubefirst cluster"
+            k3d cluster delete kubefirst
+        fi
 
         # kubefirst settings
         say "Destroying all kubefirst files & folders"
