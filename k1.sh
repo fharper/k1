@@ -354,6 +354,9 @@ elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
         say "Destroying k3d kubefirst cluster"
         k3d cluster delete kubefirst
 
+        say "Destroying k3d kubefirst-console cluster"
+        k3d cluster delete kubefirst-console
+
         # kubefirst settings
         say "Destroying all kubefirst files & folders"
         rm -rf ~/.k1
