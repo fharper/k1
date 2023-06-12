@@ -398,6 +398,8 @@ elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
 # Destroy Kubefirst #
 #####################
 elif [[ "$platform" == 5* && "$action" == 1* ]] ; then
+    local confirmation=$(gum confirm && echo "true" || echo "false")
+
     if [[ $confirmation == "true" ]] ; then
         say "Destroying kubefirst folders & files"
         rm -rf ~/.k1/
