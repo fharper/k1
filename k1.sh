@@ -72,11 +72,13 @@ function say {
 # menu #
 ########
 
+# Welcome message
 gum style \
 	--foreground 212 --border-foreground 212 --border double \
 	--align center --width 100 --margin "1 2" --padding "2 4" \
 	'k1-utils' 'With great power comes great responsibility, use carefully!'
 
+# Platform menu
 gum format -- "Which platform?"
 local platform=$(gum choose \
     "1- GitHub" \
@@ -87,6 +89,7 @@ local platform=$(gum choose \
     "6- EXIT" \
 )
 
+# Git Providers Submenu
 local action=""
 local platform_name=${platform//[0-9]- /}
 if [[ "$platform" == 1* || "$platform" == 2* ]] ; then
@@ -99,6 +102,7 @@ if [[ "$platform" == 1* || "$platform" == 2* ]] ; then
     )
 fi
 
+# Cloud Providers Submenu
 if [[ "$platform" == 3* || "$platform" == 4* ]] ; then
     gum format -- "What do you to do $platform_name?"
     local action=$(gum choose \
@@ -106,6 +110,7 @@ if [[ "$platform" == 3* || "$platform" == 4* ]] ; then
     )
 fi
 
+# kubefirst submenu
 if [[ "$platform" == 5* ]] ; then
     gum format -- "What do you to do?"
     local action=$(gum choose \
