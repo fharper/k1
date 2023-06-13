@@ -140,26 +140,22 @@ if [[ "$platform" == 1* && "$action" == 1* ]] ; then
         # Repos
         say "Destroying GitHub repositories (if any)"
 
-        local id=$(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/users/$username/repos | jq '.[] | select(.name=="gitops") | .id')
-        if [[ -n $id ]]; then
+        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops 2> /dev/null | grep "Not Found") ]]; then
             say "Destroying GitHub repository $username/gitops"
             curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops
         fi
 
-        local id=$(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/users/$username/repos | jq '.[] | select(.name=="metaphor") | .id')
-        if [[ -n $id ]]; then
+        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor 2> /dev/null | grep "Not Found") ]]; then
             say "Destroying GitHub repository $username/metaphor"
             curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor
         fi
 
-        local id=$(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/repos | jq '.[] | select(.name=="gitops") | .id')
-        if [[ -n $id ]]; then
+        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/gitops 2> /dev/null | grep "Not Found") ]]; then
             say "Destroying GitHub repository $org/gitops"
             curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops
         fi
 
-        local id=$(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/repos | jq '.[] | select(.name=="metaphor") | .id')
-        if [[ -n $id ]]; then
+        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/metaphor 2> /dev/null | grep "Not Found") ]]; then
             say "Destroying GitHub repository $org/metaphor"
             curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
         fi
