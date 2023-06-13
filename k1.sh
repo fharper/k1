@@ -475,15 +475,28 @@ elif [[ "$platform" == 5* && "$action" == 2* ]] ; then
 
     if [[ $confirmation == "true" ]] ; then
         say "Destroying the kubefirst logs"
-        rm ~/.k1/logs/*
+
+        if [ -d ~/.k1/logs ]; then
+            rm ~/.k1/logs/*
+        fi
     fi
 
 ###################################################
 # Backup Kubefirst Configurations files + folders #
 ###################################################
 elif [[ "$platform" == 5* && "$action" == 3* ]] ; then
-    say "Backuping kubefirst .kubefirst file & .k1 folder from your home directory"
-    zip k1-configs.zip ~/.k1 ~/.kubefirst
+    say "Backuping kubefirst .kubefirst file & .k1 folder from your home directory (if they exist)"
+
+    if [ -d ~/.k1 && -f ~/.kubefirst ]; then
+        say "Backuping everything"
+        zip k1-configs.zip ~/.k1 ~/.kubefirst
+    elif [ -d ~/.k1 ]; then
+        say "Backuping only the ~/.k1 folder"
+        zip k1-configs.zip ~/.k1
+    elif [ -f ~/.kubefirst ]; then
+        say "Backuping only the ~/.kubefirst file"
+        zip k1-configs.zip ~/.kubefirst
+    fi
 
 ############
 # Quitting #
