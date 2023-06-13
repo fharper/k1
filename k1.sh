@@ -116,6 +116,7 @@ if [[ "$platform" == 5* ]] ; then
     local action=$(gum choose \
         "1- destroy" \
         "2- clean logs" \
+        "3- backup configs" \
     )
 fi
 
@@ -454,6 +455,13 @@ elif [[ "$platform" == 5* && "$action" == 2* ]] ; then
         say "Destroying the kubefirst logs"
         rm ~/.k1/logs/*
     fi
+
+###################################################
+# Backup Kubefirst Configurations files + folders #
+###################################################
+elif [[ "$platform" == 5* && "$action" == 3* ]] ; then
+    say "Backuping kubefirst .kubefirst file & .k1 folder from your home directory"
+    zip k1-configs.zip ~/.k1 ~/.kubefirst
 
 ############
 # Quitting #
