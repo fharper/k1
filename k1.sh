@@ -131,11 +131,17 @@ if [[ "$platform" == 1* && "$action" == 1* ]] ; then
         say "Destroying everything GitHub"
 
         # Groups
-        say "Destroying GitHub Groups"
-        say "Destroying GitHub Group Developer"
-        curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
-        say "Destroying GitHub Group Admins"
-        curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
+        say "Destroying GitHub Groups (if any)"
+
+        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers 2> /dev/null | grep "Not Found") ]]; then
+            say "Destroying GitHub Group Developer"
+            curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
+        fi
+
+        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins 2> /dev/null | grep "Not Found") ]]; then
+            say "Destroying GitHub Group Admins"
+            curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
+        fi
 
         # Repos
         say "Destroying GitHub repositories (if any)"
