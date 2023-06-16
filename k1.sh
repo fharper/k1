@@ -156,12 +156,12 @@ if [[ "$platform" == 1* && "$action" == 1* ]] ; then
             curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor
         fi
 
-        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/gitops 2> /dev/null | grep "Not Found") ]]; then
+        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops 2> /dev/null | grep "Not Found") ]]; then
             say "Destroying GitHub repository $org/gitops"
             curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops
         fi
 
-        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/metaphor 2> /dev/null | grep "Not Found") ]]; then
+        if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor 2> /dev/null | grep "Not Found") ]]; then
             say "Destroying GitHub repository $org/metaphor"
             curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
         fi
