@@ -186,6 +186,7 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
         if [[ -n $id ]]; then
             say "Destroying GitLab Group Developers"
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
+            echo ""
         fi
 
         ## admins
@@ -193,6 +194,7 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
         if [[ -n $id ]]; then
             say "Destroying GitLab Group Admins"
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
+            echo ""
         fi
 
         # Repos
@@ -203,6 +205,7 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
         if [[ -n $project_id ]]; then
             say "Destroying GitLab Repository gitops"
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+            echo ""
         fi
 
         ## metaphor
@@ -215,15 +218,18 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
                 ### Container Registry Tags
                 say "Destroying GitLab Container Registry Tags for metaphor"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id/tags/ --data "name_regex=.*"
+                echo ""
 
                 ### Container Registry
                 say "Destroying GitLab Container Registry for metaphor"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories/$registry_id
+                echo ""
             fi
 
             ### Repository
             say "Destroying GitLab Repository metaphor"
             curl -sS -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
+            echo ""
         fi
 
         # SSH Key
@@ -233,12 +239,14 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
         if [[ -n $id ]]; then
             say "Destroying GitLab kubefirst-k3d-ssh-key SSH Key "
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
+            echo ""
         fi
 
         local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kbot-ssh-key") | .id')
         if [[ -n $id ]]; then
             say "Destroying GitLab kbot-ssh-key SSH Key "
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
+            echo ""
         fi
     fi
 
