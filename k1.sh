@@ -105,7 +105,7 @@ fi
 # Cloud Providers Submenu
 if [[ "$platform" == 3* || "$platform" == 4* ]] ; then
     gum format -- "What do you to do $platform_name?"
-    local action=$(gum choose \
+    action=$(gum choose \
         "1- destroy" \
     )
 fi
@@ -113,7 +113,7 @@ fi
 # kubefirst submenu
 if [[ "$platform" == 5* ]] ; then
     gum format -- "What do you to do?"
-    local action=$(gum choose \
+    action=$(gum choose \
         "1- destroy" \
         "2- clean logs" \
         "3- backup configs" \
@@ -227,9 +227,17 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
         fi
 
         # SSH Key
+        say "Destroying GitLab SSH Key (if any)"
+
         local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kubefirst-k3d-ssh-key") | .id')
         if [[ -n $id ]]; then
-            say "Destroying GitLab SSH Key"
+            say "Destroying GitLab kubefirst-k3d-ssh-key SSH Key "
+            curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
+        fi
+
+        local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/ | jq '.[] | select(.title=="kbot-ssh-key") | .id')
+        if [[ -n $id ]]; then
+            say "Destroying GitLab kbot-ssh-key SSH Key "
             curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/user/keys/$id
         fi
     fi
