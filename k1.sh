@@ -32,16 +32,17 @@ local civo_api="https://api.civo.com/v2"
 ########
 if ! which k3d >/dev/null; then
   echo "Please install k3d - https://github.com/k3d-io/k3d"
-  return
+  exit
 fi
 
 if ! which jq >/dev/null; then
   echo "Please install jq - https://github.com/stedolan/jq"
-  return
+  exit
 fi
 
 if ! which gum >/dev/null; then
   echo "Please install gum - https://github.com/charmbracelet/gum/"
+  exit
 fi
 
 if ! which doctl >/dev/null; then
