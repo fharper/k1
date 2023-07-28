@@ -92,7 +92,7 @@ local platform=$(gum choose \
 # Git Providers Submenu
 local action=""
 local platform_name=${platform//[0-9]- /}
-if [[ "$platform" == 1* || "$platform" == 2* ]] ; then
+if [[ "$platform" == *"GitHub" || "$platform" == *"GitLab" ]] ; then
     gum format -- "What do you to do with $platform_name?"
     local action=$(gum choose \
         "1- destroy" \
@@ -103,7 +103,7 @@ if [[ "$platform" == 1* || "$platform" == 2* ]] ; then
 fi
 
 # Cloud Providers Submenu
-if [[ "$platform" == 3* || "$platform" == 4* ]] ; then
+if [[ "$platform" == *"k3d" || "$platform" == *"Civo" || "$platform" == *"Google Cloud" || "$platform" == *"DigitalOcean" ]] ; then
     gum format -- "What do you to do $platform_name?"
     action=$(gum choose \
         "1- destroy" \
@@ -111,7 +111,7 @@ if [[ "$platform" == 3* || "$platform" == 4* ]] ; then
 fi
 
 # kubefirst submenu
-if [[ "$platform" == 5* ]] ; then
+if [[ "$platform" == *"kubefirst" ]] ; then
     gum format -- "What do you to do?"
     action=$(gum choose \
         "1- destroy" \
@@ -123,7 +123,7 @@ fi
 ##################
 # destroy GitHub #
 ##################
-if [[ "$platform" == 1* && "$action" == 1* ]] ; then
+if [[ "$platform" == *"GitHub" && "$action" == *"destroy" ]] ; then
 
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
@@ -171,7 +171,7 @@ if [[ "$platform" == 1* && "$action" == 1* ]] ; then
 ##################
 # destroy GitLab #
 ##################
-elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
+elif [[ "$platform" == *"GitLab" && "$action" == *"destroy" ]] ; then
 
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
@@ -254,7 +254,7 @@ elif [[ "$platform" == 2* && "$action" == 1* ]] ; then
 #######################
 # GitHub repos public #
 #######################
-elif [[ "$platform" == 1* && "$action" == 2* ]] ; then
+elif [[ "$platform" == *"GitHub" && "$action" == *"make repos public" ]] ; then
 
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
@@ -288,7 +288,7 @@ elif [[ "$platform" == 1* && "$action" == 2* ]] ; then
 #######################
 # GitLab repos public #
 #######################
-elif [[ "$platform" == 2* && "$action" == 2* ]] ; then
+elif [[ "$platform" == *"GitLab" && "$action" == *"make repos public" ]] ; then
 
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
@@ -314,7 +314,7 @@ elif [[ "$platform" == 2* && "$action" == 2* ]] ; then
 #######################
 # GitLab token scopes #
 #######################
-elif [[ "$platform" == 1* && "$action" == 3* ]] ; then
+elif [[ "$platform" == *"GitHub" && "$action" == *"get token scopes" ]] ; then
 
     say "Getting the scopes of the GitLab token"
     curl -sS -f -I -H "Authorization: Bearer $GITHUB_TOKEN" $github_api | grep -i x-oauth-scopes | grep -v access-control-expose-headers
@@ -323,7 +323,7 @@ elif [[ "$platform" == 1* && "$action" == 3* ]] ; then
 #######################
 # GitLab token scopes #
 #######################
-elif [[ "$platform" == 2* && "$action" == 3* ]] ; then
+elif [[ "$platform" == *"GitLab" && "$action" == *"get token scopes" ]] ; then
 
     say "Getting the scopes of the GitHub token"
     curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/personal_access_tokens/self | jq '.scopes'
@@ -332,7 +332,7 @@ elif [[ "$platform" == 2* && "$action" == 3* ]] ; then
 ####################################
 # GitHub add a repo with Terraform #
 ####################################
-elif [[ "$platform" == 1* && "$action" == 4* ]] ; then
+elif [[ "$platform" == *"GitHub" && "$action" == *"add a repo with Terraform" ]] ; then
     say "Creating a PR to add a repository named 'newtestrepo' with Terraform on GitHub"
 
     local file="terraform/github/repos.tf"
@@ -363,7 +363,7 @@ elif [[ "$platform" == 1* && "$action" == 4* ]] ; then
 ####################################
 # GitLab add a repo with Terraform #
 ####################################
-elif [[ "$platform" == 2* && "$action" == 4* ]] ; then
+elif [[ "$platform" == *"GitLab" && "$action" == *"add a repo with Terraform" ]] ; then
     say "Creating a PR to add a repository named 'newtestrepo' with Terraform on GitLab"
 
     local file="terraform/gitlab/projects.tf"
@@ -395,7 +395,7 @@ elif [[ "$platform" == 2* && "$action" == 4* ]] ; then
 ###############
 # Destroy k3d #
 ###############
-elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
+elif [[ "$platform" == *"k3d" && "$action" == *"destroy" ]] ; then
 
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
@@ -433,7 +433,7 @@ elif [[ "$platform" == 3* && "$action" == 1* ]] ; then
 ################
 # Destroy Civo #
 ################
-elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
+elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
 
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
@@ -464,9 +464,9 @@ elif [[ "$platform" == 4* && "$action" == 1* ]] ; then
     fi
 
 #####################
-# Destroy Kubefirst #
+# Destroy kubefirst #
 #####################
-elif [[ "$platform" == 5* && "$action" == 1* ]] ; then
+elif [[ "$platform" == *"kubefirst" && "$action" == *"destroy" ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
@@ -486,7 +486,7 @@ elif [[ "$platform" == 5* && "$action" == 1* ]] ; then
 ##########################
 # Destroy Kubefirst Logs #
 ##########################
-elif [[ "$platform" == 5* && "$action" == 2* ]] ; then
+elif [[ "$platform" == *"kubefirst" && "$action" == *"clean logs" ]] ; then
     local confirmation=$(gum confirm && echo "true" || echo "false")
 
     if [[ $confirmation == "true" ]] ; then
@@ -500,7 +500,7 @@ elif [[ "$platform" == 5* && "$action" == 2* ]] ; then
 ###################################################
 # Backup Kubefirst Configurations files + folders #
 ###################################################
-elif [[ "$platform" == 5* && "$action" == 3* ]] ; then
+elif [[ "$platform" == *"kubefirst" && "$action" == *"backup configs" ]] ; then
     say "Backuping kubefirst .kubefirst file & .k1 folder from your home directory (if they exist)"
 
     if [ -d ~/.k1 && -f ~/.kubefirst ]; then
@@ -517,7 +517,7 @@ elif [[ "$platform" == 5* && "$action" == 3* ]] ; then
 ############
 # Quitting #
 ############
-elif [[ "$platform" == 6* ]] ; then
+elif [[ "$platform" == *"EXIT" ]] ; then
     echo "\n"
     say "Goodbye my lover"
     say "Goodbye my friend"
