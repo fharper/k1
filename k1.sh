@@ -56,14 +56,17 @@ fi
 ############
 if [ -z "${GITHUB_TOKEN}" ]; then
   echo "Please set the GITHUB_TOKEN environment variable"
+  exit
 fi
 
 if [ -z "${GITLAB_TOKEN}" ]; then
   echo "Please set the GITLAB_TOKEN environment variable"
+  exit
 fi
 
 if [ -z "${CIVO_TOKEN}" ]; then
   echo "Please set the CIVO_TOKEN environment variable"
+  exit
 fi
 
 if [ -z "${DO_TOKEN}" ]; then
