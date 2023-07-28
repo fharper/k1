@@ -42,7 +42,11 @@ fi
 
 if ! which gum >/dev/null; then
   echo "Please install gum - https://github.com/charmbracelet/gum/"
-  return
+fi
+
+if ! which doctl >/dev/null; then
+  echo "Please install doctl - https://github.com/digitalocean/doctl"
+  exit
 fi
 
 
@@ -59,6 +63,21 @@ fi
 
 if [ -z "${CIVO_TOKEN}" ]; then
   echo "Please set the CIVO_TOKEN environment variable"
+fi
+
+if [ -z "${DO_TOKEN}" ]; then
+  echo "Please set the DO_TOKEN environment variable"
+  exit
+fi
+
+if [ -z "${DO_SPACES_KEY}" ]; then
+  echo "Please set the DO_SPACES_KEY environment variable"
+  exit
+fi
+
+if [ -z "${DO_SPACES_SECRET}" ]; then
+  echo "Please set the DO_SPACES_SECRET environment variable"
+  exit
 fi
 
 #############
@@ -81,12 +100,13 @@ gum style \
 # Platform menu
 gum format -- "Which platform?"
 local platform=$(gum choose \
-    "1- GitHub" \
-    "2- GitLab" \
-    "3- k3d" \
-    "4- Civo" \
-    "5- kubefirst" \
-    "6- EXIT" \
+    "1- Civo" \
+    "2- DigitalOcean" \
+    "3- GitHub" \
+    "4- GitLab" \
+    "5- k3d" \
+    "6- kubefirst" \
+    "7- EXIT" \
 )
 
 # Git Providers Submenu
@@ -512,6 +532,22 @@ elif [[ "$platform" == *"kubefirst" && "$action" == *"backup configs" ]] ; then
     elif [ -f ~/.kubefirst ]; then
         say "Backuping only the ~/.kubefirst file"
         zip k1-configs.zip ~/.kubefirst
+    fi
+
+########################
+# Destroy DigitalOcean #
+########################
+elif [[ "$platform" == *"DigitalOcean" && "$action" == *"destroy" ]] ; then
+    local confirmation=$(gum confirm && echo "true" || echo "false")
+
+    if [[ $confirmation == "true" ]] ; then
+        say "Destroying everything DigitalOcean"
+
+        local cluster=$(doctl kubernetes cluster list | grep "$cluster_name")
+        if [[ -n $cluster ]]; then
+            say "Destroying DigitalOcean cluster with associated resources"
+            doctl kubernetes cluster delete "$cluster_name" --dangerous --force
+        fi
     fi
 
 ############
