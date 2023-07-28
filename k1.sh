@@ -312,7 +312,7 @@ elif [[ "$platform" == *"GitLab" && "$action" == *"make repos public" ]] ; then
 
 
 #######################
-# GitLab token scopes #
+# GitHub token scopes #
 #######################
 elif [[ "$platform" == *"GitHub" && "$action" == *"get token scopes" ]] ; then
 
