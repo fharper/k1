@@ -442,14 +442,9 @@ elif [[ "$platform" == *"k3d" && "$action" == *"destroy" ]] ; then
 #
 elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
 
-    # Check if jq is installed
-    if ! which jq >/dev/null; then
-        echo "Please install jq - https://github.com/stedolan/jq"
-        exit
-
-    # Check if the Civo token environment variable is set
-    elif [ -z "${CIVO_TOKEN}" ]; then
-        echo "Please set the CIVO_TOKEN environment variable"
+    # Check if civo is installed
+    if ! which civo >/dev/null; then
+        echo "Please install civo - https://github.com/civo/cli"
         exit
 
     ################
@@ -461,26 +456,11 @@ elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
         if [[ $confirmation == "true" ]] ; then
             say "Destroying everything Civo"
 
-            local cluster_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters | jq -r '.items[] | select(.name=="'$cluster_name'")  | .id')
+            local cluster=$(civo kubernetes ls | grep "$cluster_name")
+            if [[ -n $cluster ]]; then
+                say "Destroying Civo cluster with associated volumes"
 
-            # volumes
-            local volumes_ids=($(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id'))
-            say "Destroying all Civo volumes (if any)"
-            for volume_id in $volumes_ids; do
-                curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes/$volume_id
-            done
-
-            # cluster
-            if [[ -n $cluster_id ]]; then
-                say "Destroying the Civo cluster"
-                curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters/$cluster_id
-            fi
-
-            # network
-            local network_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks | jq -r '.[] | select(.label=="'$cluster_name'") | .id')
-            if [[ -n $network_id ]]; then
-                say "Destroying the Civo network"
-                curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks/$network_id
+                civo kubernetes remove --yes "$cluster_name"
             fi
         fi
     fi
