@@ -56,20 +56,6 @@ if [ -z "${CIVO_TOKEN}" ]; then
   exit
 fi
 
-if [ -z "${DO_TOKEN}" ]; then
-  echo "Please set the DO_TOKEN environment variable"
-  exit
-fi
-
-if [ -z "${DO_SPACES_KEY}" ]; then
-  echo "Please set the DO_SPACES_KEY environment variable"
-  exit
-fi
-
-if [ -z "${DO_SPACES_SECRET}" ]; then
-  echo "Please set the DO_SPACES_SECRET environment variable"
-  exit
-fi
 
 #############
 # FUNCTIONS #
