@@ -31,23 +31,9 @@ local civo_api="https://api.civo.com/v2"
 # TOOL #
 ########
 
-if ! which k3d >/dev/null; then
-  echo "Please install k3d - https://github.com/k3d-io/k3d"
-  exit
-fi
-
-if ! which jq >/dev/null; then
-  echo "Please install jq - https://github.com/stedolan/jq"
-  exit
-fi
-
+# Check if gum is installed
 if ! which gum >/dev/null; then
   echo "Please install gum - https://github.com/charmbracelet/gum/"
-  exit
-fi
-
-if ! which doctl >/dev/null; then
-  echo "Please install doctl - https://github.com/digitalocean/doctl"
   exit
 fi
 
@@ -91,6 +77,7 @@ fi
 function say {
     gum style --foreground 93 "$1"
 }
+
 
 ########
 # menu #
@@ -144,6 +131,7 @@ if [[ "$platform" == *"kubefirst" ]] ; then
         "3- backup configs" \
     )
 fi
+
 
 #
 # GitHub
@@ -269,16 +257,21 @@ if [[ "$platform" == *"GitHub" ]] ; then
         rm -rf gitops
     fi
 
+
 #
 # GitLab
 #
-
 elif [[ "$platform" == *"GitLab" ]] ; then
+
+    # Check if jq is installed
+    if ! which jq >/dev/null; then
+        echo "Please install jq - https://github.com/stedolan/jq"
+        exit
 
     ##################
     # destroy GitLab #
     ##################
-    if [["$action" == *"destroy" ]] ; then
+    elif [["$action" == *"destroy" ]] ; then
 
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
@@ -428,69 +421,85 @@ elif [[ "$platform" == *"GitLab" ]] ; then
 ###############
 elif [[ "$platform" == *"k3d" && "$action" == *"destroy" ]] ; then
 
-    local confirmation=$(gum confirm && echo "true" || echo "false")
+    # Check if they have k3d installed first
+    if ! which k3d >/dev/null; then
+        echo "Please install k3d - https://github.com/k3d-io/k3d"
+        exit
+    else
 
-    if [[ $confirmation == "true" ]] ; then
-        say "Destroying k3d clusters (if any)"
+        local confirmation=$(gum confirm && echo "true" || echo "false")
 
-        # cluster
-        local cluster=$(k3d cluster list | grep kubefirst-console)
-        if [[ -n $cluster ]]; then
-            say "Destroying k3d kubefirst-console cluster"
-            k3d cluster delete kubefirst-console
-        fi
+        if [[ $confirmation == "true" ]] ; then
+            say "Destroying k3d clusters (if any)"
 
-        local cluster=$(k3d cluster list | grep kubefirst)
-        if [[ -n $cluster ]]; then
-            say "Destroying k3d kubefirst cluster"
-            k3d cluster delete kubefirst
-        fi
+            # cluster
+            local cluster=$(k3d cluster list | grep kubefirst-console)
+            if [[ -n $cluster ]]; then
+                say "Destroying k3d kubefirst-console cluster"
+                k3d cluster delete kubefirst-console
+            fi
 
-        # kubefirst settings
-        say "Destroying all kubefirst files & folders (if any)"
+            local cluster=$(k3d cluster list | grep kubefirst)
+            if [[ -n $cluster ]]; then
+                say "Destroying k3d kubefirst cluster"
+                k3d cluster delete kubefirst
+            fi
 
-        if [ -d ~/.k1 ]; then
-            say "Destroying kubefirst folder"
-            rm -rf ~/.k1
-        fi
+            # kubefirst settings
+            say "Destroying all kubefirst files & folders (if any)"
 
-        if [ -f ~/.kubefirst ]; then
-            say "Destroying kubefirst configuration file"
-            rm ~/.kubefirst
+            if [ -d ~/.k1 ]; then
+                say "Destroying kubefirst folder"
+                rm -rf ~/.k1
+            fi
+
+            if [ -f ~/.kubefirst ]; then
+                say "Destroying kubefirst configuration file"
+                rm ~/.kubefirst
+            fi
         fi
     fi
 
-
-################
-# Destroy Civo #
-################
+#
+# Civo
+#
 elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
 
-    local confirmation=$(gum confirm && echo "true" || echo "false")
+    # Check if jq is installed
+    if ! which jq >/dev/null; then
+        echo "Please install jq - https://github.com/stedolan/jq"
+        exit
 
-    if [[ $confirmation == "true" ]] ; then
-        say "Destroying everything Civo"
+    ################
+    # Destroy Civo #
+    ################
+    elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
+        local confirmation=$(gum confirm && echo "true" || echo "false")
 
-        local cluster_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters | jq -r '.items[] | select(.name=="'$cluster_name'")  | .id')
+        if [[ $confirmation == "true" ]] ; then
+            say "Destroying everything Civo"
 
-        # volumes
-        local volumes_ids=($(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id'))
-        say "Destroying all Civo volumes (if any)"
-        for volume_id in $volumes_ids; do
-            curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes/$volume_id
-        done
+            local cluster_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters | jq -r '.items[] | select(.name=="'$cluster_name'")  | .id')
 
-        # cluster
-        if [[ -n $cluster_id ]]; then
-            say "Destroying the Civo cluster"
-            curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters/$cluster_id
-        fi
+            # volumes
+            local volumes_ids=($(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes | jq -r '.[] | select(.cluster_id=="'$cluster_id'") | .id'))
+            say "Destroying all Civo volumes (if any)"
+            for volume_id in $volumes_ids; do
+                curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/volumes/$volume_id
+            done
 
-        # network
-        local network_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks | jq -r '.[] | select(.label=="'$cluster_name'") | .id')
-        if [[ -n $network_id ]]; then
-            say "Destroying the Civo network"
-            curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks/$network_id
+            # cluster
+            if [[ -n $cluster_id ]]; then
+                say "Destroying the Civo cluster"
+                curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/kubernetes/clusters/$cluster_id
+            fi
+
+            # network
+            local network_id=$(curl -sS -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks | jq -r '.[] | select(.label=="'$cluster_name'") | .id')
+            if [[ -n $network_id ]]; then
+                say "Destroying the Civo network"
+                curl -X DELETE -H "Authorization: Bearer $CIVO_TOKEN" $civo_api/networks/$network_id
+            fi
         fi
     fi
 
@@ -551,14 +560,33 @@ elif [[ "$platform" == *"kubefirst" ]] ; then
 
     fi
 
-########################
-# Destroy DigitalOcean #
-########################
+#
+# DigitalOcean
+#
 elif [[ "$platform" == *"DigitalOcean" && "$action" == *"destroy" ]] ; then
-    local confirmation=$(gum confirm && echo "true" || echo "false")
 
-    if [[ $confirmation == "true" ]] ; then
-        say "Destroying everything DigitalOcean"
+    # Check if DigitalOcean CLI is installed
+    if ! which doctl >/dev/null; then
+        echo "Please install doctl - https://github.com/digitalocean/doctl"
+        exit
+    else
+
+        ########################
+        # Destroy DigitalOcean #
+        ########################
+        local confirmation=$(gum confirm && echo "true" || echo "false")
+
+        if [[ $confirmation == "true" ]] ; then
+            say "Destroying everything DigitalOcean"
+
+            local cluster=$(doctl kubernetes cluster list | grep "$cluster_name")
+            if [[ -n $cluster ]]; then
+                say "Destroying DigitalOcean cluster with associated resources"
+                doctl kubernetes cluster delete "$cluster_name" --dangerous --force
+            fi
+        fi
+    fi
+
 
         local cluster=$(doctl kubernetes cluster list | grep "$cluster_name")
         if [[ -n $cluster ]]; then
