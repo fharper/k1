@@ -38,25 +38,6 @@ if ! which gum >/dev/null; then
 fi
 
 
-############
-# ENV VARS #
-############
-if [ -z "${GITHUB_TOKEN}" ]; then
-  echo "Please set the GITHUB_TOKEN environment variable"
-  exit
-fi
-
-if [ -z "${GITLAB_TOKEN}" ]; then
-  echo "Please set the GITLAB_TOKEN environment variable"
-  exit
-fi
-
-if [ -z "${CIVO_TOKEN}" ]; then
-  echo "Please set the CIVO_TOKEN environment variable"
-  exit
-fi
-
-
 #############
 # FUNCTIONS #
 #############
@@ -124,10 +105,15 @@ fi
 #
 if [[ "$platform" == *"GitHub" ]] ; then
 
+    # Check if GitHub token environment variable is set
+    if [ -z "${GITHUB_TOKEN}" ]; then
+        echo "Please set the GITHUB_TOKEN environment variable"
+        exit
+
     ##################
     # destroy GitHub #
     ##################
-    if [[ "$action" == *"destroy" ]] ; then
+    elif [[ "$action" == *"destroy" ]] ; then
 
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
@@ -252,6 +238,11 @@ elif [[ "$platform" == *"GitLab" ]] ; then
     # Check if jq is installed
     if ! which jq >/dev/null; then
         echo "Please install jq - https://github.com/stedolan/jq"
+        exit
+
+    # Check if the GitLab token environment variable is set
+    elif [ -z "${GITLAB_TOKEN}" ]; then
+        echo "Please set the GITLAB_TOKEN environment variable"
         exit
 
     ##################
@@ -454,6 +445,11 @@ elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
     # Check if jq is installed
     if ! which jq >/dev/null; then
         echo "Please install jq - https://github.com/stedolan/jq"
+        exit
+
+    # Check if the Civo token environment variable is set
+    elif [ -z "${CIVO_TOKEN}" ]; then
+        echo "Please set the CIVO_TOKEN environment variable"
         exit
 
     ################
