@@ -393,17 +393,21 @@ elif [[ "$platform" == *"GitLab" ]] ; then
 
     fi
 
-###############
-# Destroy k3d #
-###############
-elif [[ "$platform" == *"k3d" && "$action" == *"destroy" ]] ; then
+
+#
+# k3d
+#
+elif [[ "$platform" == *"k3d" ]] ; then
 
     # Check if they have k3d installed first
     if ! which k3d >/dev/null; then
         echo "Please install k3d - https://github.com/k3d-io/k3d"
         exit
-    else
 
+    ###############
+    # Destroy k3d #
+    ###############
+    elif [[ "$action" == *"destroy" ]] ; then
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
         if [[ $confirmation == "true" ]] ; then
@@ -437,10 +441,11 @@ elif [[ "$platform" == *"k3d" && "$action" == *"destroy" ]] ; then
         fi
     fi
 
+
 #
 # Civo
 #
-elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
+elif [[ "$platform" == *"Civo" ]] ; then
 
     # Check if civo is installed
     if ! which civo >/dev/null; then
@@ -450,7 +455,7 @@ elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
     ################
     # Destroy Civo #
     ################
-    elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
+    elif [[ "$action" == *"destroy" ]] ; then
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
         if [[ $confirmation == "true" ]] ; then
@@ -465,10 +470,12 @@ elif [[ "$platform" == *"Civo" && "$action" == *"destroy" ]] ; then
         fi
     fi
 
+
 #
 # kubefirst
 #
 elif [[ "$platform" == *"kubefirst" ]] ; then
+
     #####################
     # Destroy kubefirst #
     #####################
@@ -522,20 +529,21 @@ elif [[ "$platform" == *"kubefirst" ]] ; then
 
     fi
 
+
 #
 # DigitalOcean
 #
-elif [[ "$platform" == *"DigitalOcean" && "$action" == *"destroy" ]] ; then
+elif [[ "$platform" == *"DigitalOcean" ]] ; then
 
     # Check if DigitalOcean CLI is installed
     if ! which doctl >/dev/null; then
         echo "Please install doctl - https://github.com/digitalocean/doctl"
         exit
-    else
 
         ########################
         # Destroy DigitalOcean #
         ########################
+    elif [[ "$action" == *"destroy" ]] ; then
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
         if [[ $confirmation == "true" ]] ; then
