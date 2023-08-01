@@ -63,9 +63,10 @@ local platform=$(gum choose \
     "2- DigitalOcean" \
     "3- GitHub" \
     "4- GitLab" \
-    "5- k3d" \
-    "6- kubefirst" \
-    "7- EXIT" \
+    "5- Google Cloud" \
+    "6- k3d" \
+    "7- kubefirst" \
+    "8- EXIT" \
 )
 
 # Git Providers Submenu
@@ -558,12 +559,37 @@ elif [[ "$platform" == *"DigitalOcean" ]] ; then
     fi
 
 
-        local cluster=$(doctl kubernetes cluster list | grep "$cluster_name")
-        if [[ -n $cluster ]]; then
-            say "Destroying DigitalOcean cluster with associated resources"
-            doctl kubernetes cluster delete "$cluster_name" --dangerous --force
+#
+# Google Cloud
+#
+elif [[ "$platform" == *"Google Cloud" ]] ; then
+
+    # Check if Google Cloud CLI is installed
+    if ! which gcloud >/dev/null; then
+        echo "Please install gcloud - https://cloud.google.com/sdk"
+        exit
+
+    ########################
+    # Destroy Google Cloud #
+    ########################
+    # WARNING: It is not complete
+    elif [[ "$action" == *"destroy" ]] ; then
+        local confirmation=$(gum confirm && echo "true" || echo "false")
+
+        if [[ $confirmation == "true" ]] ; then
+            say "Destroying everything Google Cloud"
+
+            # VPC
+            # There is a bug where the VPC is created under kubefirst, and not the cluster name
+            #local vpc=$(gcloud compute networks list | grep $cluster_name)
+            local vpc=$(gcloud compute networks list | grep kubefirst)
+            if [[ -n $vpc ]]; then
+                say "Destroying the Google Cloud VPC"
+                gcloud compute networks delete kubefirst
+            fi
         fi
     fi
+
 
 ############
 # Quitting #
