@@ -343,14 +343,14 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
             if [[ -n $project_id ]]; then
                 say "Changing GitHub Private Repository gitops to a Public one"
-                curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
+                curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d "visibility=public"
             fi
 
             # metaphor
             local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
             if [[ -n $project_id ]]; then
                 say "Changing GitHub Private Repository metaphor to a Public one"
-                curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d '{"visibility":"public"}'
+                curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d "visibility=public"
             fi
         fi
 
