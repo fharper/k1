@@ -249,7 +249,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
     ##################
     # destroy GitLab #
     ##################
-    elif [["$action" == *"destroy" ]] ; then
+    elif [[ "$action" == *"destroy" ]] ; then
 
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
