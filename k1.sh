@@ -107,7 +107,7 @@ fi
 if [[ "$platform" == *"GitHub" ]] ; then
 
     # Check if GitHub token environment variable is set
-    if [ -z "${GITHUB_TOKEN}" ]; then
+    if [[ -z "${GITHUB_TOKEN}" ]] ; then
         echo "Please set the GITHUB_TOKEN environment variable"
         exit
 
@@ -242,7 +242,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
         exit
 
     # Check if the GitLab token environment variable is set
-    elif [ -z "${GITLAB_TOKEN}" ]; then
+    elif [[ -z "${GITLAB_TOKEN}" ]] ; then
         echo "Please set the GITLAB_TOKEN environment variable"
         exit
 
@@ -486,12 +486,12 @@ elif [[ "$platform" == *"kubefirst" ]] ; then
         if [[ $confirmation == "true" ]] ; then
             say "Destroying all kubefirst files & folders (if any)"
 
-            if [ -d ~/.k1 ]; then
+            if [[ -d ~/.k1 ]] ; then
                 say "Destroying kubefirst folder"
                 rm -rf ~/.k1
             fi
 
-            if [ -f ~/.kubefirst ]; then
+            if [[ -f ~/.kubefirst ]] ; then
                 say "Destroying kubefirst configuration file"
                 rm ~/.kubefirst
             fi
@@ -517,13 +517,13 @@ elif [[ "$platform" == *"kubefirst" ]] ; then
     elif [[ "$action" == *"backup configs" ]] ; then
         say "Backuping kubefirst .kubefirst file & .k1 folder from your home directory (if they exist)"
 
-        if [ -d ~/.k1 && -f ~/.kubefirst ]; then
+        if [[ -d ~/.k1 && -f ~/.kubefirst ]] ; then
             say "Backuping everything"
             zip k1-configs.zip ~/.k1 ~/.kubefirst
-        elif [ -d ~/.k1 ]; then
+        elif [[ -d ~/.k1 ]] ; then
             say "Backuping only the ~/.k1 folder"
             zip k1-configs.zip ~/.k1
-        elif [ -f ~/.kubefirst ]; then
+        elif [[ -f ~/.kubefirst ]] ; then
             say "Backuping only the ~/.kubefirst file"
             zip k1-configs.zip ~/.kubefirst
         fi
