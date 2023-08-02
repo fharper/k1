@@ -235,6 +235,7 @@ if [[ "$platform" == *"GitHub" ]] ; then
 # GitLab
 #
 elif [[ "$platform" == *"GitLab" ]] ; then
+    # We need to do API calls as the glab CLI is extremely limited
 
     # Check if jq is installed
     if ! which jq >/dev/null; then
