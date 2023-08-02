@@ -196,7 +196,7 @@ if [[ "$platform" == *"GitHub" ]] ; then
     #######################
     elif [[ "$action" == *"get token scopes" ]] ; then
 
-        say "Getting the scopes of the GitLab token"
+        say "Getting the scopes of the GitHub token"
         curl -sS -f -I -H "Authorization: Bearer $GITHUB_TOKEN" $github_api | grep -i x-oauth-scopes | grep -v access-control-expose-headers
 
     ####################################
