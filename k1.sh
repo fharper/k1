@@ -47,6 +47,11 @@ function say {
     gum style --foreground 93 "$1"
 }
 
+# Clear last terminal line
+function clearLastLine {
+    tput cuu 1 >&2
+    tput el >&2
+}
 
 ########
 # menu #
@@ -70,6 +75,7 @@ local platform=$(gum choose \
     "7- kubefirst" \
     "8- EXIT" \
 )
+clearLastLine
 
 # Git Providers Submenu
 local action=""
@@ -102,6 +108,7 @@ if [[ "$platform" == *"kubefirst" ]] ; then
     )
 fi
 
+clearLastLine
 
 #
 # GitHub
