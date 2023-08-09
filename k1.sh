@@ -204,9 +204,10 @@ if [[ "$platform" == *"GitHub" ]] ; then
     # GitHub token scopes #
     #######################
     elif [[ "$action" == *"get token scopes" ]] ; then
-
         say "Getting the scopes of the GitHub token"
-        curl -sS -f -I -H "Authorization: Bearer $GITHUB_TOKEN" $github_api | grep -i x-oauth-scopes | grep -v access-control-expose-headers
+        echo
+        curl -sS -f -I -H "Authorization: token ${GITHUB_TOKEN}" https://api.github.com | grep ^x-oauth-scopes: | cut -d' ' -f2- | tr -d "[:space:]" | tr ',' '\n'
+        echo "\n"
 
     ####################################
     # GitHub add a repo with Terraform #
