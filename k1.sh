@@ -41,6 +41,8 @@ fi
 #############
 # FUNCTIONS #
 #############
+
+# echo something with a nice style
 function say {
     gum style --foreground 93 "$1"
 }
