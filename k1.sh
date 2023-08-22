@@ -590,6 +590,18 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
         if [[ $confirmation == "true" ]] ; then
             say "Destroying everything Google Cloud"
 
+            # Buckets
+            local buckets=$(gcloud storage buckets list --filter "$cluster_name" --format='json' | jq '.[].storage_url' | tr -d '"')
+            if [[ -n "$buckets" ]]; then
+                say "Destroying the Google Cloud bucket(s)"
+
+                for bucket (${(f)buckets})
+                do
+                    # Using "storage rm -r" instead of "storage buckets delete" will also make deletion of non-empty buckets possible
+                    gcloud storage rm -r "$bucket" --quiet
+                done
+            fi
+
             # VPC
             # There is a bug where the VPC is created under kubefirst, and not the cluster name
             #local vpc=$(gcloud compute networks list | grep $cluster_name)
