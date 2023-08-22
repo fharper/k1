@@ -584,6 +584,10 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
         echo "Please install gcloud - https://cloud.google.com/sdk"
         exit
 
+    elif ! which jq >/dev/null; then
+        echo "Please install jq - https://github.com/stedolan/jq"
+        exit
+
     ########################
     # Destroy Google Cloud #
     ########################
