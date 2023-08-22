@@ -595,7 +595,7 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
             say "Destroying everything Google Cloud"
 
             # Buckets
-            local buckets=$(gcloud storage buckets list --filter "$cluster_name" --format='json' | jq '.[].storage_url' | tr -d '"')
+            local buckets=$(gcloud storage buckets list --filter "$cluster_name" --format='json' | jq -r '.[].storage_url')
             if [[ -n "$buckets" ]]; then
                 say "Destroying the Google Cloud bucket(s)"
 
@@ -607,7 +607,7 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
             fi
 
             # VPC
-            local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq '.[].name' | tr -d '"')
+            local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$vpc" ]]; then
                 say "Destroying the Google Cloud VPC"
                 gcloud compute networks delete "$vpc --quiet"
@@ -627,5 +627,4 @@ elif [[ "$platform" == *"EXIT" ]] ; then
     say "You have been the one for me"
     echo "\n"
     exit
-
 fi
