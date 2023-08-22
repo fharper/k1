@@ -545,6 +545,8 @@ elif [[ "$platform" == *"kubefirst" ]] ; then
 #
 # DigitalOcean
 #
+# CLI docs: https://docs.digitalocean.com/reference/doctl/reference/
+#
 elif [[ "$platform" == *"DigitalOcean" ]] ; then
 
     # Check if DigitalOcean CLI is installed
@@ -572,6 +574,8 @@ elif [[ "$platform" == *"DigitalOcean" ]] ; then
 
 #
 # Google Cloud
+#
+# CLI docs: https://cloud.google.com/sdk/gcloud/reference
 #
 elif [[ "$platform" == *"Google Cloud" ]] ; then
 
