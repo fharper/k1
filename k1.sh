@@ -611,13 +611,14 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
             fi
 
             # Keyrings (we create them in global)
+            say "Destroying the Google Cloud Keyring (if any)"
+
             local keyrings_group=$(gcloud kms keyrings list --location global --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$keyrings_group" ]]; then
 
                 # Get the keys
                 local keyrings=$(gcloud kms keys list --location global --keyring "$keyrings_group" --format="json" | jq -r '.[].name')
                 if [[ -n "$keyrings" ]]; then
-                    say "Destroying the Google Cloud Keyring"
 
                     for key (${(f)keyrings})
                     do
