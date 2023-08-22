@@ -640,7 +640,7 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
             local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$vpc" ]]; then
                 say "Destroying the Google Cloud VPC"
-                gcloud compute networks delete "$vpc --quiet"
+                gcloud compute networks delete "$vpc" --quiet
             fi
         fi
     fi
