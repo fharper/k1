@@ -636,6 +636,18 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
                 fi
             fi
 
+            # Services Accounts
+            local service_accounts=$(gcloud iam service-accounts list --filter "$cluster_name" --format="json" | jq -r '.[].name' | sed 's/projects\/.*\/serviceAccounts\/\(.*\)/\1/')
+            if [[ -n "$service_accounts" ]]; then
+                say "Destroying the Google Cloud Services Accounts"
+
+                # Destroy each services accounts
+                for service (${(f)service_accounts})
+                do
+                    gcloud iam service-accounts delete "$service" --quiet
+                done
+            fi
+
             # VPC
             local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$vpc" ]]; then
