@@ -610,6 +610,31 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
                 done
             fi
 
+            # Keyrings (we create them in global)
+            local keyrings_group=$(gcloud kms keyrings list --location global --filter "$cluster_name" --format="json" | jq -r '.[].name')
+            if [[ -n "$keyrings_group" ]]; then
+
+                # Get the keys
+                local keyrings=$(gcloud kms keys list --location global --keyring "$keyrings_group" --format="json" | jq -r '.[].name')
+                if [[ -n "$keyrings" ]]; then
+                    say "Destroying the Google Cloud Keyring"
+
+                    for key (${(f)keyrings})
+                    do
+                        # Get the versions
+                        local versions=$(gcloud kms keys versions list --location global --keyring "$keyrings_group" --key "$key" --format="json" | jq -r '.[] | select(.state!="DESTROY_SCHEDULED") | .name')
+                        if [[ -n "$versions" ]]; then
+
+                            #Destroy each versions
+                            for version (${(f)versions})
+                            do
+                                gcloud kms keys versions destroy "$version"
+                            done
+                        fi
+                    done
+                fi
+            fi
+
             # VPC
             local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$vpc" ]]; then
