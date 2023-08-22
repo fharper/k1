@@ -603,12 +603,10 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
             fi
 
             # VPC
-            # There is a bug where the VPC is created under kubefirst, and not the cluster name
-            #local vpc=$(gcloud compute networks list | grep $cluster_name)
-            local vpc=$(gcloud compute networks list | grep kubefirst)
-            if [[ -n $vpc ]]; then
+            local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq '.[].name' | tr -d '"')
+            if [[ -n "$vpc" ]]; then
                 say "Destroying the Google Cloud VPC"
-                gcloud compute networks delete kubefirst
+                gcloud compute networks delete "$vpc --quiet"
             fi
         fi
     fi
