@@ -623,7 +623,8 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
                     for key (${(f)keyrings})
                     do
                         # Get the versions
-                        local versions=$(gcloud kms keys versions list --location global --keyring "$keyrings_group" --key "$key" --format="json" | jq -r '.[] | select(.state!="DESTROY_SCHEDULED") | .name')
+                        local versions=$(gcloud kms keys versions list --location global --keyring "$keyrings_group" --key "$key" --format="json" | jq -r '.[] | select(.state=="ENABLED") | .name')
+
                         if [[ -n "$versions" ]]; then
 
                             #Destroy each versions
