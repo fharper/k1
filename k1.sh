@@ -491,6 +491,12 @@ elif [[ "$platform" == *"Civo" ]] ; then
                 done
             fi
 
+            local network=$(civo network ls | grep "$cluster_name")
+            if [[ -n $network ]]; then
+                say "Destroying the Civo network"
+
+                civo network remove --yes "$cluster_name"
+            fi
         fi
     fi
 
