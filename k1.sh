@@ -475,10 +475,22 @@ elif [[ "$platform" == *"Civo" ]] ; then
 
             local cluster=$(civo kubernetes ls | grep "$cluster_name")
             if [[ -n $cluster ]]; then
-                say "Destroying Civo cluster with associated volumes"
+                say "Destroying the Civo cluster"
 
                 civo kubernetes remove --yes "$cluster_name"
             fi
+
+            local volumes=$(civo volume ls --output json | jq -r '.[] | select(.network_id=="'$cluster_name'") | .id')
+            if [[ -n "$volumes" ]]; then
+                say "Destroying the Civo Volumes"
+
+                # Destroy each volumes
+                for volume (${(f)volumes})
+                do
+                    civo volumes remove "$volume" --yes
+                done
+            fi
+
         fi
     fi
 
