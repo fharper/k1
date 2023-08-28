@@ -673,6 +673,13 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
                 say "Destroying the Google Cloud VPC"
                 gcloud compute networks delete "$vpc" --quiet
             fi
+
+            # Cluster
+            local cluster=$(gcloud container clusters list --filter "$cluster_name")
+            if [[ -n "$cluster" ]]; then
+                say "Destroying the Google Cloud cluster"
+                gcloud container clusters delete "$cluster_name"
+            fi
         fi
     fi
 
