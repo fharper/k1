@@ -491,7 +491,7 @@ elif [[ "$platform" == *"Civo" ]] ; then
                 done
             fi
 
-            local network=$(civo network ls | grep "$cluster_name")
+            local network=$(civo network ls --output json | jq -r '.[] | select(.label=="'$cluster_name'") | .id')
             if [[ -n $network ]]; then
                 say "Destroying the Civo network"
 
