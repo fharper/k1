@@ -47,10 +47,26 @@ function say {
     gum style --foreground 93 "$1"
 }
 
+# echo something in red for an error
+function error {
+    gum style --foreground 9 "$1"
+}
+
 # Clear last terminal line
 function clearLastLine {
     tput cuu 1 >&2
     tput el >&2
+}
+
+# Get the cluster name to destroy
+function getClusterName {
+    say "What is the cluster name?"
+    cluster=$(gum input --placeholder="$cluster_name")
+
+    # If nothing is entered, it will use the default cluster name
+    if [[ -n "$cluster" ]] ; then
+        cluster_name="$cluster"
+    fi
 }
 
 ########
@@ -468,6 +484,8 @@ elif [[ "$platform" == *"Civo" ]] ; then
     # Destroy Civo #
     ################
     elif [[ "$action" == *"destroy" ]] ; then
+        getClusterName
+
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
         if [[ $confirmation == "true" ]] ; then
@@ -578,6 +596,8 @@ elif [[ "$platform" == *"DigitalOcean" ]] ; then
         # Destroy DigitalOcean #
         ########################
     elif [[ "$action" == *"destroy" ]] ; then
+        getClusterName
+
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
         if [[ $confirmation == "true" ]] ; then
@@ -613,6 +633,8 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
     ########################
     # WARNING: It is not complete
     elif [[ "$action" == *"destroy" ]] ; then
+        getClusterName
+
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
         if [[ $confirmation == "true" ]] ; then
