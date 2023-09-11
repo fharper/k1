@@ -167,6 +167,7 @@ if [[ "$platform" == *"MongoDB" ]] ; then
     gum format -- "What do you to do?"
     action=$(gum choose \
         "1- drop gitops-catalog" \
+        "2- remove an installed app state" \
     )
 fi
 
@@ -773,6 +774,22 @@ elif [[ "$platform" == *"MongoDB" ]] ; then
         if [[ $confirmation == "true" ]] ; then
             say "Dropping the gitops-catalog document from MongoDB"
             echo 'use api;\ndb.getCollection("gitops-catalog").drop();' | mongosh "mongodb://$mongodb_username:$mongodb_password@$mongodb_hostname:$mongodb_port"
+        fi
+
+    #################################
+    # remove an installed app state #
+    #################################
+    elif [[ "$action" == *"remove an installed app state" ]] ; then
+        getUserInput "application's name" "Which application do you want to remove?" "kubernetes-dashboard"
+        app_name=$user_input
+
+        getClusterName
+
+        local confirmation=$(gum confirm && echo "true" || echo "false")
+
+        if [[ $confirmation == "true" ]] ; then
+            say "Removing $app_name from the list of installed application from MongoDB"
+            echo 'use api;\ndb.services.updateOne({'cluster_name': "'$cluster_name'" }, { $pull: { services: { name: "'$app_name'" } } } );' | mongosh "mongodb://$mongodb_username:$mongodb_password@$mongodb_hostname:$mongodb_port"
         fi
 
     fi
