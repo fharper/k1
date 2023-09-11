@@ -631,7 +631,6 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
     ########################
     # Destroy Google Cloud #
     ########################
-    # WARNING: It is not complete
     elif [[ "$action" == *"destroy" ]] ; then
         getClusterName
 
