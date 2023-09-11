@@ -61,7 +61,7 @@ function clearLastLine {
 # Get the cluster name to destroy
 function getClusterName {
     say "What is the cluster name?"
-    cluster=$(gum input --placeholder="$cluster_name")
+    local cluster=$(gum input --placeholder="$cluster_name")
 
     # If nothing is entered, it will use the default cluster name
     if [[ -n "$cluster" ]] ; then
