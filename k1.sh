@@ -12,10 +12,10 @@
 # USER CONFIGURATIONS #
 #######################
 
-# Please update the following
-local username="fharper"
-local org="kubefirst-fharper"
+# Please update the following for default values
 local cluster_name="kubefirst-fred"
+local github_organization="kubefirst-fharper"
+local github_username="fharper"
 
 
 ##################
@@ -149,37 +149,37 @@ if [[ "$platform" == *"GitHub" ]] ; then
             # Groups
             say "Destroying GitHub Groups (if any)"
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/teams/developers 2> /dev/null | grep "Not Found") ]]; then
                 say "Destroying GitHub Group Developer"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/developers
+                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/teams/developers
             fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/teams/admins 2> /dev/null | grep "Not Found") ]]; then
                 say "Destroying GitHub Group Admins"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/teams/admins
+                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/teams/admins
             fi
 
             # Repos
             say "Destroying GitHub repositories (if any)"
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub repository $username/gitops"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/gitops 2> /dev/null | grep "Not Found") ]]; then
+                say "Destroying GitHub repository $github_username/gitops"
+                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/gitops
             fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub repository $username/metaphor"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/metaphor 2> /dev/null | grep "Not Found") ]]; then
+                say "Destroying GitHub repository $github_username/metaphor"
+                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/metaphor
             fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub repository $org/gitops"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/gitops 2> /dev/null | grep "Not Found") ]]; then
+                say "Destroying GitHub repository $github_organization/gitops"
+                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/gitops
             fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub repository $org/metaphor"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/metaphor 2> /dev/null | grep "Not Found") ]]; then
+                say "Destroying GitHub repository $github_organization/metaphor"
+                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/metaphor
             fi
         fi
 
@@ -194,25 +194,25 @@ if [[ "$platform" == *"GitHub" ]] ; then
             say "Changing GitHub Private Repositories to Public ones (if any)"
 
             # gitops
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/gitops 2> /dev/null | grep "Not Found") ]]; then
                 say "Changing GitHub Private Repositories gitops to Public"
-                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/gitops  -d '{"private":false}'
+                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/gitops  -d '{"private":false}'
             fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/gitops 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/gitops 2> /dev/null | grep "Not Found") ]]; then
                 say "Changing GitHub Private Repositories gitops to Public"
-                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/gitops  -d '{"private":false}'
+                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/gitops  -d '{"private":false}'
             fi
 
             # metaphor
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/metaphor 2> /dev/null | grep "Not Found") ]]; then
                 say "Changing GitHub Private Repositories metaphor to Public"
-                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$username/metaphor  -d '{"private":false}'
+                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/metaphor  -d '{"private":false}'
             fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$org/metaphor 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/metaphor 2> /dev/null | grep "Not Found") ]]; then
                 say "Changing GitHub Private Repositories metaphor to Public"
-                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$org/metaphor  -d '{"private":false}'
+                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/metaphor  -d '{"private":false}'
             fi
         fi
 
@@ -234,7 +234,7 @@ if [[ "$platform" == *"GitHub" ]] ; then
         local file="terraform/github/repos.tf"
         local branch="testing-atlantis"
 
-        git clone git@github.com:$org/gitops.git
+        git clone git@github.com:$github_organization/gitops.git
         cd gitops
 
         echo '' >> $file
@@ -287,7 +287,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             say "Destroying GitLab Groups (if any)"
 
             ## Developers
-            local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$org'/developers") | .id')
+            local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$github_organization'/developers") | .id')
             if [[ -n $id ]]; then
                 say "Destroying GitLab Group Developers"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
@@ -295,7 +295,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             fi
 
             ## admins
-            local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$org'/admins") | .id')
+            local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$github_organization'/admins") | .id')
             if [[ -n $id ]]; then
                 say "Destroying GitLab Group Admins"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
@@ -306,7 +306,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             say "Destroying GitLab Repositories & Registry (if any)"
 
             ## gitops
-            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
+            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$github_organization/projects/ | jq '.[] | select(.name=="gitops") | .id')
             if [[ -n $project_id ]]; then
                 say "Destroying GitLab Repository gitops"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
@@ -314,7 +314,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             fi
 
             ## metaphor
-            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
+            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$github_organization/projects/ | jq '.[] | select(.name=="metaphor") | .id')
 
             if [[ -n $project_id ]]; then
                 local registry_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories | jq '.[].id')
@@ -366,14 +366,14 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             say "Changing GitLab Private Repositories to Public ones (if any)"
 
             # gitops
-            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="gitops") | .id')
+            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$github_organization/projects/ | jq '.[] | select(.name=="gitops") | .id')
             if [[ -n $project_id ]]; then
                 say "Changing GitHub Private Repository gitops to a Public one"
                 curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d "visibility=public"
             fi
 
             # metaphor
-            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$org/projects/ | jq '.[] | select(.name=="metaphor") | .id')
+            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$github_organization/projects/ | jq '.[] | select(.name=="metaphor") | .id')
             if [[ -n $project_id ]]; then
                 say "Changing GitHub Private Repository metaphor to a Public one"
                 curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d "visibility=public"
@@ -397,7 +397,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
         local file="terraform/gitlab/projects.tf"
         local branch="testing-atlantis"
 
-        git clone git@gitlab.com:$org/gitops.git
+        git clone git@gitlab.com:$github_organization/gitops.git
         cd gitops
 
         echo '' >> $file
