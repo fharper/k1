@@ -27,6 +27,12 @@ local github_api="https://api.github.com"
 local gitlab_api="https://gitlab.com/api/v4"
 local civo_api="https://api.civo.com/v2"
 
+# Used for input using the getUserInput function
+# You can't output text to display in the Terminal while a subshell (with '$()') is waiting for the command output.
+# It will display only in the end, which isn't useful in the while condition I'm using.
+# See https://stackoverflow.com/a/64810239/895232
+local user_input=""
+
 
 ########
 # TOOL #
@@ -68,6 +74,32 @@ function getClusterName {
     if [[ -n "$cluster" ]] ; then
         cluster_name="$cluster"
     fi
+}
+
+#
+# Ask the user for a specific input, which cannot be empty
+#
+# @param input name
+# @param the label asking the user's input
+# @param a placeholder (not require)
+#
+# return the user input
+#
+function getUserInput {
+    # Be sure it's empty from previous call
+    user_input=""
+
+    # Cannot be empty
+    while [[ "$user_input" = "" ]] ; do
+        say "$2"
+        user_input=$(gum input --placeholder="$3")
+
+        if [[ -z "$user_input" ]] ; then
+            clearLastLine
+            error "$1 cannot be empty"
+            echo
+        fi
+    done
 }
 
 ########
