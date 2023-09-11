@@ -17,6 +17,10 @@ local cluster_name="kubefirst-fred"
 local github_organization="kubefirst-fharper"
 local github_username="fharper"
 local gitlab_organization="kubefirst-fharper"
+local mongodb_hostname="localhost"
+local mongodb_password="pass"
+local mongodb_port=27017
+local mongodb_username="user"
 
 
 ##################
@@ -122,7 +126,8 @@ local platform=$(gum choose \
     "5- Google Cloud" \
     "6- k3d" \
     "7- kubefirst" \
-    "8- EXIT" \
+    "8- MongoDB" \
+    "9- EXIT" \
 )
 clearLastLine
 
@@ -154,6 +159,14 @@ if [[ "$platform" == *"kubefirst" ]] ; then
         "1- destroy" \
         "2- clean logs" \
         "3- backup configs" \
+    )
+fi
+
+# MongoDB submenu
+if [[ "$platform" == *"MongoDB" ]] ; then
+    gum format -- "What do you to do?"
+    action=$(gum choose \
+        "1- drop gitops-catalog" \
     )
 fi
 
@@ -739,6 +752,30 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
         fi
     fi
 
+#
+# MongoDB
+#
+# CLI docs: https://www.mongodb.com/docs/mongodb-shell/
+#
+elif [[ "$platform" == *"MongoDB" ]] ; then
+
+    # Check if MongoDB Shell is installed
+    if ! which mongosh >/dev/null; then
+        echo "Please install mongosh - https://github.com/mongodb-js/mongosh"
+        exit
+
+    ######################################
+    # drop the gitops-catalog collection #
+    ######################################
+    elif [[ "$action" == *"drop gitops-catalog" ]] ; then
+        local confirmation=$(gum confirm && echo "true" || echo "false")
+
+        if [[ $confirmation == "true" ]] ; then
+            say "Dropping the gitops-catalog document from MongoDB"
+            echo 'use api;\ndb.getCollection("gitops-catalog").drop();' | mongosh "mongodb://$mongodb_username:$mongodb_password@$mongodb_hostname:$mongodb_port"
+        fi
+
+    fi
 
 ############
 # Quitting #
