@@ -16,6 +16,7 @@
 local cluster_name="kubefirst-fred"
 local github_organization="kubefirst-fharper"
 local github_username="fharper"
+local gitlab_organization="kubefirst-fharper"
 
 
 ##################
@@ -287,7 +288,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             say "Destroying GitLab Groups (if any)"
 
             ## Developers
-            local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$github_organization'/developers") | .id')
+            local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$gitlab_organization'/developers") | .id')
             if [[ -n $id ]]; then
                 say "Destroying GitLab Group Developers"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
@@ -295,7 +296,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             fi
 
             ## admins
-            local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$github_organization'/admins") | .id')
+            local id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/ | jq '.[] | select(.full_path=="'$gitlab_organization'/admins") | .id')
             if [[ -n $id ]]; then
                 say "Destroying GitLab Group Admins"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$id
@@ -306,7 +307,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             say "Destroying GitLab Repositories & Registry (if any)"
 
             ## gitops
-            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$github_organization/projects/ | jq '.[] | select(.name=="gitops") | .id')
+            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$gitlab_organization/projects/ | jq '.[] | select(.name=="gitops") | .id')
             if [[ -n $project_id ]]; then
                 say "Destroying GitLab Repository gitops"
                 curl -X DELETE -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id
@@ -314,7 +315,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             fi
 
             ## metaphor
-            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$github_organization/projects/ | jq '.[] | select(.name=="metaphor") | .id')
+            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$gitlab_organization/projects/ | jq '.[] | select(.name=="metaphor") | .id')
 
             if [[ -n $project_id ]]; then
                 local registry_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id/registry/repositories | jq '.[].id')
@@ -366,14 +367,14 @@ elif [[ "$platform" == *"GitLab" ]] ; then
             say "Changing GitLab Private Repositories to Public ones (if any)"
 
             # gitops
-            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$github_organization/projects/ | jq '.[] | select(.name=="gitops") | .id')
+            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$gitlab_organization/projects/ | jq '.[] | select(.name=="gitops") | .id')
             if [[ -n $project_id ]]; then
                 say "Changing GitHub Private Repository gitops to a Public one"
                 curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d "visibility=public"
             fi
 
             # metaphor
-            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$github_organization/projects/ | jq '.[] | select(.name=="metaphor") | .id')
+            local project_id=$(curl -sS -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/groups/$gitlab_organization/projects/ | jq '.[] | select(.name=="metaphor") | .id')
             if [[ -n $project_id ]]; then
                 say "Changing GitHub Private Repository metaphor to a Public one"
                 curl -sS -X PUT -H "Authorization: Bearer $GITLAB_TOKEN" $gitlab_api/projects/$project_id -d "visibility=public"
@@ -397,7 +398,7 @@ elif [[ "$platform" == *"GitLab" ]] ; then
         local file="terraform/gitlab/projects.tf"
         local branch="testing-atlantis"
 
-        git clone git@gitlab.com:$github_organization/gitops.git
+        git clone git@gitlab.com:$gitlab_organization/gitops.git
         cd gitops
 
         echo '' >> $file
