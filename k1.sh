@@ -196,14 +196,14 @@ if [[ "$platform" == *"GitHub" ]] ; then
             # Groups
             say "Destroying GitHub Groups (if any)"
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/teams/developers 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/teams/developers 2> /dev/null | grep "Not Found") ]]; then
                 say "Destroying GitHub Group Developer"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/teams/developers
+                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/teams/developers
             fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/teams/admins 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/teams/admins 2> /dev/null | grep "Not Found") ]]; then
                 say "Destroying GitHub Group Admins"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/teams/admins
+                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/teams/admins
             fi
 
             # Repos
@@ -246,7 +246,7 @@ if [[ "$platform" == *"GitHub" ]] ; then
                 curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/gitops  -d '{"private":false}'
             fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/gitops 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/gitops 2> /dev/null | grep "Not Found") ]]; then
                 say "Changing GitHub Private Repositories gitops to Public"
                 curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/gitops  -d '{"private":false}'
             fi
@@ -257,7 +257,7 @@ if [[ "$platform" == *"GitHub" ]] ; then
                 curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/metaphor  -d '{"private":false}'
             fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/github_organizations/$github_organization/metaphor 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/metaphor 2> /dev/null | grep "Not Found") ]]; then
                 say "Changing GitHub Private Repositories metaphor to Public"
                 curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/metaphor  -d '{"private":false}'
             fi
