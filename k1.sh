@@ -14,6 +14,7 @@
 
 # Please update the following for default values
 local cluster_name="kubefirst-fred"
+local google_cloud_region="us-east1"
 local github_organization="kubefirst-fharper"
 local github_username="fharper"
 local gitlab_organization="kubefirst-fharper"
@@ -104,6 +105,30 @@ function getUserInput {
             echo
         fi
     done
+}
+
+#
+# Let the user select a region from the list, or enter one manually if no list is provided
+# It will set the correct variable depending on the cloud.
+#
+# @param the cloud targeted
+#
+#
+function getClusterRegion {
+
+    # Google Cloud
+    if [[ "$1" == "Google Cloud" ]] ; then
+
+        say "Fetching Google Cloud regions"
+        local regions=$(gcloud compute regions list  --format='json' | jq -r '.[].name')
+        clearLastLine
+
+        gum format -- "Which region?"
+        google_cloud_region=$(echo "$regions" | gum choose --selected "$google_cloud_region")
+        clearLastLine
+    else
+        error "cloud not supported yet for region listing"
+    fi
 }
 
 ########
@@ -680,6 +705,7 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
     ########################
     elif [[ "$action" == *"destroy" ]] ; then
         getClusterName
+        getClusterRegion "Google Cloud"
 
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
@@ -737,18 +763,18 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
                 done
             fi
 
+            # Cluster
+            local cluster=$(gcloud container clusters list --filter "$cluster_name")
+            if [[ -n "$cluster" ]]; then
+                say "Destroying the Google Cloud cluster"
+                gcloud container clusters delete "$cluster_name" --region "$google_cloud_region" --quiet
+            fi
+
             # VPC
             local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$vpc" ]]; then
                 say "Destroying the Google Cloud VPC"
                 gcloud compute networks delete "$vpc" --quiet
-            fi
-
-            # Cluster
-            local cluster=$(gcloud container clusters list --filter "$cluster_name")
-            if [[ -n "$cluster" ]]; then
-                say "Destroying the Google Cloud cluster"
-                gcloud container clusters delete "$cluster_name"
             fi
         fi
     fi
