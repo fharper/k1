@@ -789,6 +789,18 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
                 gcloud container clusters delete "$cluster_name" --region "$google_cloud_region" --quiet
             fi
 
+            # Firewall Rules
+            local firewall_rules=$(gcloud compute firewall-rules list --filter "$cluster_name" --format="json" | jq -r '.[].name')
+            if [[ -n "$firewall_rules" ]]; then
+                say "Destroying the Google Cloud Network Firewall Rules"
+
+                # Destroy each firewall rule
+                for rule (${(f)firewall_rules})
+                do
+                    gcloud compute firewall-rules delete "$rule" --quiet
+                done
+            fi
+
             # VPC
             local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$vpc" ]]; then
