@@ -93,6 +93,7 @@ function getClusterName {
     if [[ -n "$cluster" ]] ; then
         cluster_name="$cluster"
     fi
+    clearLastLine
 }
 
 #
