@@ -801,6 +801,18 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
                 done
             fi
 
+            # VPC Routes
+            local vpc_routes=$(gcloud compute routes list --filter "$cluster_name" --format="json" | jq -r '.[].name')
+            if [[ -n "$vpc_routes" ]]; then
+                say "Destroying the Google Cloud VPC Routes"
+
+                # Destroy each route
+                for route (${(f)vpc_routes})
+                do
+                    gcloud compute routes delete "$route" --quiet
+                done
+            fi
+
             # VPC
             local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$vpc" ]]; then
