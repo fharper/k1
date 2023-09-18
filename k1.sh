@@ -813,6 +813,13 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
                 done
             fi
 
+            # VPC Subnet
+            local subnet=$(gcloud compute networks subnets list --filter "$cluster_name" --format="json" | jq -r '.[].name')
+            if [[ -n "$subnet" ]]; then
+                say "Destroying the Google Cloud VPC Subnet"
+                gcloud compute networks subnets delete "$subnet" --region "$google_cloud_region" --quiet
+            fi
+
             # VPC
             local vpc=$(gcloud compute networks list --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$vpc" ]]; then
