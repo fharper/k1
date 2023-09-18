@@ -742,28 +742,32 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
             # Keyrings (we create them in global)
             say "Destroying the Google Cloud Keyring (if any)"
 
-            local keyrings_group=$(gcloud kms keyrings list --location global --filter "$cluster_name" --format="json" | jq -r '.[].name')
-            if [[ -n "$keyrings_group" ]]; then
+            local keyrings_groups=$(gcloud kms keyrings list --location global --filter "$cluster_name" --format="json" | jq -r '.[].name')
+            if [[ -n "$keyrings_groups" ]]; then
 
-                # Get the keys
-                local keyrings=$(gcloud kms keys list --location global --keyring "$keyrings_group" --format="json" | jq -r '.[].name')
-                if [[ -n "$keyrings" ]]; then
+                # Process all the keyrings groups
+                for keyrings_group (${(f)keyrings_groups})
+                do
+                    # Get the keys
+                    local keyrings=$(gcloud kms keys list --location global --keyring "$keyrings_group" --format="json" | jq -r '.[].name')
+                    if [[ -n "$keyrings" ]]; then
 
-                    for key (${(f)keyrings})
-                    do
-                        # Get the versions
-                        local versions=$(gcloud kms keys versions list --location global --keyring "$keyrings_group" --key "$key" --format="json" | jq -r '.[] | select(.state=="ENABLED") | .name')
+                        for key (${(f)keyrings})
+                        do
+                            # Get the versions
+                            local versions=$(gcloud kms keys versions list --location global --keyring "$keyrings_group" --key "$key" --format="json" | jq -r '.[] | select(.state=="ENABLED") | .name')
 
-                        if [[ -n "$versions" ]]; then
+                            if [[ -n "$versions" ]]; then
 
-                            #Destroy each versions
-                            for version (${(f)versions})
-                            do
-                                gcloud kms keys versions destroy "$version"
-                            done
-                        fi
-                    done
-                fi
+                                #Destroy each versions
+                                for version (${(f)versions})
+                                do
+                                    gcloud kms keys versions destroy "$version"
+                                done
+                            fi
+                        done
+                    fi
+                done
             fi
 
             # Services Accounts
