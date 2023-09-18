@@ -54,23 +54,37 @@ fi
 # FUNCTIONS #
 #############
 
-# echo something with a nice style
+#
+# Print something with style
+#
+# @param the message to display
+#
 function say {
     gum style --foreground 93 "$1"
 }
 
-# echo something in red for an error
+#
+# Display an error message with red formatting
+#
+# @param the error message
+#
 function error {
     gum style --foreground 9 "$1"
 }
 
+#
 # Clear last terminal line
+#
 function clearLastLine {
     tput cuu 1 >&2
     tput el >&2
 }
 
+#
 # Get the cluster name to destroy
+#
+# Use $cluster_name as default if nothing is entered
+#
 function getClusterName {
     say "What is the cluster name?"
     local cluster=$(gum input --placeholder="$cluster_name")
