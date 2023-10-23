@@ -531,17 +531,6 @@ elif [[ "$platform" == *"k3d" ]] ; then
             # clusters
             local cluster=$(k3d cluster list --output json | jq -r '.[].name' | grep kubefirst)
             if [[ -n $cluster ]]; then
-            # kubefirst settings
-            say "Destroying all kubefirst files & folders (if any)"
-
-            if [ -d ~/.k1 ]; then
-                say "Destroying kubefirst folder"
-                rm -rf ~/.k1
-            fi
-
-            if [ -f ~/.kubefirst ]; then
-                say "Destroying kubefirst configuration file"
-                rm ~/.kubefirst
                 say "Destroying k3d $cluster cluster"
                 k3d cluster delete $cluster
             fi
