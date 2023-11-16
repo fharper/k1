@@ -561,6 +561,7 @@ elif [[ "$platform" == *"Civo" ]] ; then
 
             # Need to be deleted before the cluster
             local volumes=$(civo volume ls --output json | jq -r '.[] | select(.network_id=="'$cluster_name'") | .id')
+
             if [[ -n "$volumes" ]]; then
                 say "Destroying the Civo Volumes"
 
@@ -570,7 +571,7 @@ elif [[ "$platform" == *"Civo" ]] ; then
                     civo volumes remove "$volume" --yes
                 done
             fi
-
+ 
             local cluster=$(civo kubernetes ls --output json | jq -r '.[] | select(.name=="'$cluster_name'") | .id')
             if [[ -n $cluster ]]; then
                 say "Destroying the Civo cluster"
