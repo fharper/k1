@@ -228,45 +228,71 @@ if [[ "$platform" == *"GitHub" ]] ; then
     ##################
     elif [[ "$action" == *"destroy" ]] ; then
 
+        # Organization or username
+        gum format -- "Is it a GitHub organization or an user?"
+        github_account_type=$(gum choose \
+            "Organization" \
+            "User" \
+        )
+        clearLastLine
+
+        local default_github_entity=$github_organization
+        if [[ $github_account_type == "User" ]] ; then
+            default_github_entity=$github_username
+        fi
+
+        say "What is the name of the $github_account_type?"
+        local github_entity=$(gum input --placeholder="$default_github_entity")
+        clearLastLine
+
+        # If nothing is entered, it will use the default GitHub entity name
+        if [[ -z "$github_entity" ]] ; then
+            github_entity="$default_github_entity"
+        fi
+
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
         if [[ $confirmation == "true" ]] ; then
             say "Destroying everything GitHub"
 
             # Groups
-            say "Destroying GitHub Groups (if any)"
+            if [[ $github_account_type == "Organization" ]] ; then
+                say "Destroying GitHub Groups (if any)"
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/teams/developers 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub Group Developer"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/teams/developers
-            fi
+                if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_entity/teams/developers 2> /dev/null | grep "Not Found") ]]; then
+                    say "Destroying GitHub Group Developer"
+                    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_entity/teams/developers
+                fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/teams/admins 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub Group Admins"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/teams/admins
-            fi
+                if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_entity/teams/admins 2> /dev/null | grep "Not Found") ]]; then
+                    say "Destroying GitHub Group Admins"
+                    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_entity/teams/admins
+                fi
 
-            # Repos
-            say "Destroying GitHub repositories (if any)"
+                # Repos
+                say "Destroying GitHub repositories (if any)"
+                if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/gitops 2> /dev/null | grep "Not Found") ]]; then
+                    say "Destroying GitHub repository $github_entity/gitops"
+                    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/gitops
+                fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/gitops 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub repository $github_username/gitops"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/gitops
-            fi
+                if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/metaphor 2> /dev/null | grep "Not Found") ]]; then
+                    say "Destroying GitHub repository $github_entity/metaphor"
+                    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/metaphor
+                fi
+            else
+                # Repos
+                say "Destroying GitHub repositories (if any)"
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/metaphor 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub repository $github_username/metaphor"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/metaphor
-            fi
+                if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/gitops 2> /dev/null | grep "Not Found") ]]; then
+                    say "Destroying GitHub repository $github_entity/gitops"
+                    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/gitops
+                fi
 
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/gitops 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub repository $github_organization/gitops"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/gitops
-            fi
-
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/metaphor 2> /dev/null | grep "Not Found") ]]; then
-                say "Destroying GitHub repository $github_organization/metaphor"
-                curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/metaphor
+                if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/metaphor 2> /dev/null | grep "Not Found") ]]; then
+                    say "Destroying GitHub repository $github_entity/metaphor"
+                    curl -sS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/metaphor
+                fi
             fi
         fi
 
