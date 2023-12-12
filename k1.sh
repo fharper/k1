@@ -301,31 +301,43 @@ if [[ "$platform" == *"GitHub" ]] ; then
     #######################
     elif [[ "$action" == *"make repos public" ]] ; then
 
+        # Organization or username
+        gum format -- "Is it a GitHub organization or an user?"
+        github_account_type=$(gum choose \
+            "Organization" \
+            "User" \
+        )
+        clearLastLine
+
+        local default_github_entity=$github_organization
+        if [[ $github_account_type == "User" ]] ; then
+            default_github_entity=$github_username
+        fi
+
+        say "What is the name of the $github_account_type?"
+        local github_entity=$(gum input --placeholder="$default_github_entity")
+        clearLastLine
+
+        # If nothing is entered, it will use the default GitHub entity name
+        if [[ -z "$github_entity" ]] ; then
+            github_entity="$default_github_entity"
+        fi
+
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
         if [[ $confirmation == "true" ]] ; then
             say "Changing GitHub Private Repositories to Public ones (if any)"
 
             # gitops
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/gitops 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/gitops 2> /dev/null | grep "Not Found") ]]; then
                 say "Changing GitHub Private Repositories gitops to Public"
-                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/gitops  -d '{"private":false}'
-            fi
-
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/gitops 2> /dev/null | grep "Not Found") ]]; then
-                say "Changing GitHub Private Repositories gitops to Public"
-                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/gitops  -d '{"private":false}'
+                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/gitops  -d '{"private":false}'
             fi
 
             # metaphor
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/metaphor 2> /dev/null | grep "Not Found") ]]; then
+            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/metaphor 2> /dev/null | grep "Not Found") ]]; then
                 say "Changing GitHub Private Repositories metaphor to Public"
-                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_username/metaphor  -d '{"private":false}'
-            fi
-
-            if [[ ! $(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/orgs/$github_organization/metaphor 2> /dev/null | grep "Not Found") ]]; then
-                say "Changing GitHub Private Repositories metaphor to Public"
-                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_organization/metaphor  -d '{"private":false}'
+                curl -sS -L -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" $github_api/repos/$github_entity/metaphor  -d '{"private":false}'
             fi
         fi
 
