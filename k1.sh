@@ -14,6 +14,7 @@
 
 # Please update the following for default values
 local cluster_name="kubefirst-fred"
+local civo_region="NYC1"
 local google_cloud_region="us-east1"
 local github_organization="kubefirst-fharper"
 local github_username="fharper"
@@ -134,12 +135,23 @@ function getClusterRegion {
     # Google Cloud
     if [[ "$1" == "Google Cloud" ]] ; then
 
-        say "Fetching Google Cloud regions"
+        say "Fetching $1 regions"
         local regions=$(gcloud compute regions list  --format='json' | jq -r '.[].name')
         clearLastLine
 
         gum format -- "Which region?"
         google_cloud_region=$(echo "$regions" | gum choose --selected "$google_cloud_region")
+        clearLastLine
+
+    # Civo
+    elif [[ "$1" == "Civo" ]] ; then
+
+        say "Fetching $1 regions"
+        local regions=$(civo region ls --output json | jq '.[].code' | tr -d '"')
+        clearLastLine
+
+        gum format -- "Which region?"
+        civo_region=$(echo "$regions" | gum choose --selected "$civo_region")
         clearLastLine
     else
         error "cloud not supported yet for region listing"
@@ -592,13 +604,15 @@ elif [[ "$platform" == *"Civo" ]] ; then
     elif [[ "$action" == *"destroy" ]] ; then
         getClusterName
 
+        getClusterRegion "Civo"
+
         local confirmation=$(gum confirm && echo "true" || echo "false")
 
         if [[ $confirmation == "true" ]] ; then
             say "Destroying everything Civo"
 
             # Need to be deleted before the cluster
-            local volumes=$(civo volume ls --output json | jq -r '.[] | select(.network_id=="'$cluster_name'") | .id')
+            local volumes=$(civo volume ls --region "$civo_region" --output json | jq -r '.[] | select(.network_id=="'$cluster_name'") | .id')
 
             if [[ -n "$volumes" ]]; then
                 say "Destroying the Civo Volumes"
@@ -606,15 +620,15 @@ elif [[ "$platform" == *"Civo" ]] ; then
                 # Destroy each volumes
                 for volume (${(f)volumes})
                 do
-                    civo volumes remove "$volume" --yes
+                    civo volumes remove "$volume" --region "$civo_region" --yes
                 done
             fi
  
-            local cluster=$(civo kubernetes ls --output json | jq -r '.[] | select(.name=="'$cluster_name'") | .id')
+            local cluster=$(civo kubernetes ls --region "$civo_region" --output json | jq -r '.[] | select(.name=="'$cluster_name'") | .id')
             if [[ -n $cluster ]]; then
                 say "Destroying the Civo cluster"
 
-                civo kubernetes remove --yes "$cluster_name"
+                civo kubernetes remove --region "$civo_region" --yes "$cluster_name"
             fi
 
             # Need to be deleted after the cluster
@@ -622,7 +636,7 @@ elif [[ "$platform" == *"Civo" ]] ; then
             if [[ -n $network ]]; then
                 say "Destroying the Civo network"
 
-                civo network remove --yes "$cluster_name"
+                civo network remove --region "$civo_region" --yes "$cluster_name"
             fi
         fi
     fi
