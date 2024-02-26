@@ -13,6 +13,7 @@
 #######################
 
 # Please update the following for default values
+local aws_region="us-east-1"
 local cluster_name="kubefirst-fred"
 local civo_region="NYC1"
 local google_cloud_region="us-east1"
@@ -153,6 +154,18 @@ function getClusterRegion {
         gum format -- "Which region?"
         civo_region=$(echo "$regions" | gum choose --selected "$civo_region")
         clearLastLine
+
+    # AWS
+    elif [[ "$1" == "AWS" ]] ; then
+
+        say "Fetching $1 regions"
+        local regions=$(aws ec2 describe-regions | jq '.[].[].RegionName' | tr -d '"')
+        clearLastLine
+
+        gum format -- "Which region?"
+        aws_region=$(echo "$regions" | gum choose --selected "$aws_region"  --height=20)
+        clearLastLine
+
     else
         error "cloud not supported yet for region listing"
     fi
@@ -170,22 +183,23 @@ gum style \
 
 # Platform menu
 gum format -- "Which platform?"
-local platform=$(gum choose \
-    "1- Civo" \
-    "2- DigitalOcean" \
-    "3- GitHub" \
-    "4- GitLab" \
-    "5- Google Cloud" \
-    "6- k3d" \
-    "7- kubefirst" \
-    "8- MongoDB" \
-    "9- EXIT" \
+local platform=$(gum choose --cursor="" \
+    "  ﹥ AWS" \
+    "  ﹥ Civo" \
+    "  ﹥ DigitalOcean" \
+    "  ﹥ GitHub" \
+    "  ﹥ GitLab" \
+    "  ﹥ Google Cloud" \
+    "  ﹥ k3d" \
+    "  ﹥ kubefirst" \
+    "  ﹥ MongoDB" \
+    "    EXIT" \
 )
 clearLastLine
 
 # Git Providers Submenu
 local action=""
-local platform_name=${platform//[0-9]- /}
+local platform_name=$(echo "$platform" | sed 's/  . //')
 if [[ "$platform" == *"GitHub" || "$platform" == *"GitLab" ]] ; then
     gum format -- "What do you to do with $platform_name?"
     local action=$(gum choose \
@@ -197,7 +211,7 @@ if [[ "$platform" == *"GitHub" || "$platform" == *"GitLab" ]] ; then
 fi
 
 # Cloud Providers Submenu
-if [[ "$platform" == *"k3d" || "$platform" == *"Civo" || "$platform" == *"Google Cloud" || "$platform" == *"DigitalOcean" ]] ; then
+if [[ "$platform" == *"k3d" || "$platform" == *"Civo" || "$platform" == *"Google Cloud" || "$platform" == *"DigitalOcean" || "$platform" == *"AWS" ]] ; then
     gum format -- "What do you to do $platform_name?"
     action=$(gum choose \
         "1- destroy" \
@@ -902,6 +916,49 @@ elif [[ "$platform" == *"MongoDB" ]] ; then
             echo 'use api;\ndb.services.updateOne({'cluster_name': "'$cluster_name'" }, { $pull: { services: { name: "'$app_name'" } } } );' | mongosh "mongodb://$mongodb_username:$mongodb_password@$mongodb_hostname:$mongodb_port"
         fi
 
+    fi
+
+#
+# AWS
+#
+elif [[ "$platform" == *"AWS" ]] ; then
+
+    # Check if AWS is installed
+    if ! which aws >/dev/null; then
+        echo "Please install aws - https://github.com/aws/aws-cli"
+        exit
+
+    elif ! which assume >/dev/null; then
+        echo "Please add assume alias. See https://github.com/kubefirst/kubefirst/blob/main/tools/aws-assume-role.sh for more information."
+        exit
+
+    ###############
+    # Destroy AWS #
+    ###############
+    elif [[ "$action" == *"destroy" ]] ; then
+        getClusterName
+
+        getClusterRegion "AWS"
+
+        local confirmation=$(gum confirm && echo "true" || echo "false")
+
+        if [[ $confirmation == "true" ]] ; then
+            say "Destroying everything AWS"
+
+            # Assume starter account
+            assume starter
+
+            # Delete the nodes group
+            local nodes_groups=$(aws eks list-nodegroups --cluster-name "$cluster_name" --region "$aws_region" | jq '.[].[]' | tr -d '"')
+            if [[ -n "$nodes_groups" ]]; then
+                say "Destroying AWS nodes group"
+                aws eks delete-nodegroup --cluster-name "$cluster_name" --region "$aws_region" --nodegroup-name "$nodes_groups"
+            fi
+
+            # Delete the cluster
+            say "Destroying AWS EKS cluster"
+            aws eks delete-cluster --name "$cluster_name"  --region "$aws_region"
+        fi
     fi
 
 ############
