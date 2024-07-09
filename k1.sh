@@ -15,7 +15,7 @@
 # Please update the following for default values
 local aws_region="us-east-1"
 local cluster_name="kubefirst-fred"
-local civo_region="NYC1"
+local civo_region="nyc1"
 local google_cloud_region="us-east1"
 local github_organization="kubefirst-fharper"
 local github_username="fharper"
