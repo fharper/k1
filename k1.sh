@@ -579,7 +579,7 @@ elif [[ "$platform" == *"k3d" ]] ; then
             say "Destroying k3d clusters (if any)"
 
             # clusters
-            local cluster=$(k3d cluster list --output json | jq -r '.[].name' | grep kubefirst)
+            local cluster=$(k3d cluster list --output json | jq -r '.[].name' | grep -E 'kubefirst|dev')
             if [[ -n $cluster ]]; then
                 say "Destroying k3d $cluster cluster"
                 k3d cluster delete $cluster
