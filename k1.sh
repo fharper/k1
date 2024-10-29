@@ -188,6 +188,7 @@ local platform=$(gum choose --cursor="" \
     "  ﹥ Google Cloud" \
     "  ﹥ k3d" \
     "  ﹥ kubefirst" \
+    "  ﹥ Vultr" \
     "    EXIT" \
 )
 clearLastLine
@@ -220,6 +221,14 @@ if [[ "$platform" == *"kubefirst" ]] ; then
         "1- destroy" \
         "2- clean logs" \
         "3- backup configs" \
+    )
+fi
+
+# Vultr submenu
+if [[ "$platform" == *"Vultr" ]] ; then
+    gum format -- "What do you to do?"
+    action=$(gum choose \
+        "1- destroy" \
     )
 fi
 
@@ -958,6 +967,80 @@ elif [[ "$platform" == *"AWS" ]] ; then
             aws eks delete-cluster --name "$cluster_name"  --region "$aws_region"
         fi
     fi
+
+#
+# Vultr
+#
+elif [[ "$platform" == *"Vultr" ]] ; then
+
+    # Check if Vultr CLI is installed
+    if ! which vultr-cli >/dev/null; then
+        echo "Please install vultr-cli - https://github.com/vultr/vultr-cli"
+        exit
+
+    #################
+    # Destroy Vultr #
+    #################
+    elif [[ "$action" == *"destroy" ]] ; then
+        getClusterName
+
+        local confirmation=$(gum confirm && echo "true" || echo "false")
+
+        if [[ $confirmation == "true" ]] ; then
+            say "Destroying everything Vultr"
+
+            # Delete the Kubernetes Cluster
+            local cluster_id=$(vultr-cli kubernetes list --output json | jq -r '.vke_clusters[] | select(.label=="'$cluster_name'") | .id')
+
+            if [[ -n "$cluster_id" ]]; then
+
+                #Delete the Object Storages
+                local object_storages=$(vultr-cli object-storage list --output json | jq -r '.object_storages[] | select(.label | startswith("'$cluster_id'")).id')
+
+                if [[ -n "$object_storages" ]]; then
+                    say "Destroying the Vultr Object Storages"
+
+                    # Destroy each object storage
+                    for object_storage (${(f)object_storages})
+                    do
+                        vultr-cli object-storage delete "$object_storage"
+                    done
+                fi
+
+                #Delete Virtual Private Cloud
+                local vpc=$(vultr-cli vpc list --output json | jq -r '.vpcs[] | select(.description | endswith("'$cluster_id'")).id')
+                if [[ -n "$vpc" ]]; then
+
+                    #Get load balancer
+                    local load_balancer=$(vultr-cli load-balancer list -o json | jq -r '.load_balancers[] | select(.generic_info.vpc=="'$vpc'") | .id')
+
+                    #Delete the block storage
+                    local block_storages_instances=$(vultr-cli load-balancer list -o json | jq -r '.load_balancers[] | select(.generic_info.vpc=="'$vpc'") | .instances | @csv')
+                    local block_storages=$(vultr-cli block-storage list -o json | jq '.blocks[] | select(.attached_to_instance == ('$block_storages_instances')) | .id')
+
+                    # Destroy each block storage
+                    for block_storage (${(f)block_storages})
+                    do
+                        vultr-cli block-storage delete "$block_storage"
+                    done
+
+                    #Delete the Load Balancer
+                    if [[ -n "$load_balancer" ]]; then
+                        say "Destroying the Vultr Load Balancer"
+                        vultr-cli load-balancer "$load_balancer"
+                    fi
+
+                    say "Destroying the Vultr Kubernetes Cluster"
+                    vultr-cli kubernetes delete $cluster_id
+
+                    # Need to be done after the cluster
+                    say "Destroying the Vultr Virtual Private Cloud"
+                    vultr-cli vpc delete "$vpc"
+                fi
+            fi
+        fi
+    fi
+
 
 ############
 # Quitting #
