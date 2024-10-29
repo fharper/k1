@@ -897,6 +897,13 @@ elif [[ "$platform" == *"Google Cloud" ]] ; then
                 done
             fi
 
+            # Cloud Router
+            local router=$(gcloud compute routers list --filter "$cluster_name" --format="json" | jq -r '.[].name')
+            if [[ -n "$router" ]]; then
+                say "Destroying the Google Cloud Router"
+                gcloud compute routers delete "$router" --region "$google_cloud_region" --quiet
+            fi
+
             # VPC Routes
             local vpc_routes=$(gcloud compute routes list --filter "$cluster_name" --format="json" | jq -r '.[].name')
             if [[ -n "$vpc_routes" ]]; then
